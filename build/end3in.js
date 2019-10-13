@@ -1,0 +1,297 @@
+/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId]) {
+/******/ 			return installedModules[moduleId].exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+/******/
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ (function(module, exports) {
+
+Vec2 = {};
+
+(function () {
+    Vec2.create = function (x, y) {
+        this.x = x;
+        this.y = y;
+        return Object.assign({}, this)
+    };
+
+
+    Vec2.transpose = function (x, y) {
+        this.x += x;
+        this.y += y;
+        return this
+    };
+
+    Vec2.rotate = function (theta) {
+        let rotatedX = this.x * Math.cos(theta) - this.y * Math.sin(theta);
+        let rotatedY = this.x * Math.sin(theta) + this.y * Math.cos(theta);
+        this.x = rotatedX;
+        this.y = rotatedY;
+        return this
+    };
+
+    Vec2.copy = function () {
+        return Vec2.create(this.x, this.y)
+    };
+
+    Vec2.scale = function (s) {
+        this.x *= s;
+        this.y *= s;
+        return this
+    };
+
+    Vec2.sqrtMagnitude = function () {
+        return Math.sqrt(this.magnitude());
+    };
+
+    Vec2.magnitude = function () {
+        return this.x * this.x + this.y * this.y;
+    };
+
+    Vec2.sub = function (other) {
+        this.x -= other.x;
+        this.y -= other.y;
+        return this;
+    };
+
+    Vec2.normalize = function () {
+        let len = this.sqrtMagnitude();
+        this.x /= len;
+        this.y /= len;
+        return this
+    }
+}());
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+end3in = {};
+
+end3in.Vector = __webpack_require__(0);
+end3in.Body = __webpack_require__(2);
+end3in.Engine = __webpack_require__(3);
+end3in.Collision = __webpack_require__(4);
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(0);
+
+var Body = {};
+
+module.exports = Body;
+
+(function () {
+
+    Body.rect = function (width, height, x, y) {
+        this.pos = Vec2.create(x, y);
+        this.rot = 1;
+        this.points = [Vec2.create(-width / 2, -height / 2),
+            Vec2.create(width / 2, -height / 2),
+            Vec2.create(width / 2, height / 2),
+            Vec2.create(-width / 2, height / 2)];
+        this.width = width;
+        this.height = height;
+        this.vx = 0;
+        this.vy = 0;
+        this.omega = 0.0;
+        this.m = 0.9 * this.width * this.height;
+        this.I = this.m * (this.width * this.width + this.height + this.height) / 12;
+
+        return Object.assign({}, this)
+    };
+    Body.draw = function (ctx, scale) {
+        ctx.beginPath();
+        for (let i = 0; i < this.points.length + 1; i++) {
+            let next = this.points[i % this.points.length]
+                .copy()
+                .rotate(this.rot)
+                .scale(scale)
+                .transpose(this.pos.x * scale, this.pos.y * scale);
+            if (i === 0) {
+                ctx.moveTo(next.x, next.y);
+            } else {
+                ctx.lineTo(next.x, next.y)
+            }
+        }
+        ctx.fillStyle = "#000000";
+        ctx.fill()
+
+    };
+
+    Body.update = function (dt) {
+        this.pos.x += this.vx * dt;
+        this.pos.y += this.vy * dt;
+        this.rot += this.omega * dt;
+    };
+
+    Body.applyForce = function (fx, fy, px, py, dt) {
+        px = px - this.pos.x;
+        py = py - this.pos.y;
+        let tau = px * fy - py * fx;
+        let ax = fx / this.m;
+        let ay = fy / this.m;
+        this.applyAcceleration(ax, ay, tau, dt)
+    };
+
+    Body.applyAcceleration = function (ax, ay, tau, dt) {
+        let alpha = tau / this.I;
+        this.vx += ax * dt;
+        this.vy -= ay * dt;
+        this.omega += alpha * dt;
+    };
+}());
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+var Engine = {};
+
+module.exports = Engine;
+
+(function () {
+
+    Engine.create = function () {
+        this.canvas = document.getElementById('canvas');
+        this.ctx = canvas.getContext('2d');
+        this.scale = 60;
+
+        this.width = 10 * this.scale;
+        this.height = 10 * this.scale;
+
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+
+        this.gameObjects = [];
+        return Object.assign({}, this)
+    };
+
+    Engine.start = function () {
+        self = this;
+        window.setInterval(function () {
+            self.update.call(self)
+        }, 16);
+    };
+
+    Engine.clear = function () {
+        this.ctx.fillStyle = "#FFFFFF";
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.fillStyle = "#000000";
+    };
+
+    Engine.update = function () {
+        this.clear();
+        let obj;
+        for (obj of this.gameObjects) {
+            obj.applyAcceleration(0, -9.81, 0, 16 / 1000);
+        }
+        for (obj of this.gameObjects) {
+            obj.update(16 / 1000);
+        }
+        for (obj of this.gameObjects) {
+            obj.draw(this.ctx, this.scale);
+        }
+    };
+
+    Engine.addBody = function (body) {
+        this.gameObjects.push(body);
+    };
+}());
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+Collision = {};
+
+Collision.areColliding = function (body1, body2) {
+    return false
+};
+
+/***/ })
+/******/ ]);

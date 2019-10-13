@@ -1,0 +1,31 @@
+{
+  "name": "end3in",
+  "version": "1.0.0",
+  "description": "Simple physic engine ",
+  "main": "build/end3in.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrugacz95/end3in.git"
+  },
+  "keywords": [
+    "physic",
+    "engine",
+    "javascript"
+  ],
+  "author": "Marcin Mrugas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mrugacz95/end3in/issues"
+  },
+  "homepage": "https://github.com/mrugacz95/end3in#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "webpack": "^4.41.1",
+    "webpack-cli": "^3.3.9"
+  }
+}
