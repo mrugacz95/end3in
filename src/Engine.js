@@ -36,7 +36,7 @@ module.exports = Engine;
         this.clear();
         let obj;
         for (obj of this.gameObjects) {
-            obj.applyAcceleration(0, -9.81, 0, 16 / 1000);
+            obj.applyForce(0, -9.81 * obj.m, obj.pos.x, obj.pos.y, 16 / 1000);
         }
         for (obj of this.gameObjects) {
             obj.update(16 / 1000);

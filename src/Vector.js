@@ -1,5 +1,7 @@
 Vec2 = {};
 
+module.exports = Vec2;
+
 (function () {
     Vec2.create = function (x, y) {
         this.x = x;
@@ -51,5 +53,9 @@ Vec2 = {};
         this.x /= len;
         this.y /= len;
         return this
-    }
+    };
+
+    Vec2.dot = function (other) {
+        return this.x * other.y - this.y * other.x;
+    };
 }());

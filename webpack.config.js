@@ -5,7 +5,6 @@ module.exports = {
         filename: "end3in.js"
     },
     optimization: {
-		// We no not want to minimize our code.
 		minimize: false,
         usedExports: true,
         sideEffects: true

@@ -6,9 +6,10 @@ module.exports = Body;
 
 (function () {
 
-    Body.rect = function (width, height, x, y) {
+    Body.rect = function (width, height, x, y, options = {}) {
+
         this.pos = Vec2.create(x, y);
-        this.rot = 1;
+        this.rot = options.rot || 0.0;
         this.points = [Vec2.create(-width / 2, -height / 2),
             Vec2.create(width / 2, -height / 2),
             Vec2.create(width / 2, height / 2),
@@ -18,9 +19,20 @@ module.exports = Body;
         this.vx = 0;
         this.vy = 0;
         this.omega = 0.0;
-        this.m = 0.9 * this.width * this.height;
-        this.I = this.m * (this.width * this.width + this.height + this.height) / 12;
-
+        if (options.isStatic) {
+            this.m = 0;
+            this.mInv = 0;
+            this.IInv = 0;
+        } else {
+            this.m = 0.9 * this.width * this.height;
+            this.mInv = 1.0 / this.m;
+            this.IInv = this.m * (this.width * this.width + this.height + this.height) / 12;
+        }
+        if (options.color) {
+            this.color = options.color
+        } else {
+            this.color = "#000000"
+        }
         return Object.assign({}, this)
     };
     Body.draw = function (ctx, scale) {
@@ -37,7 +49,7 @@ module.exports = Body;
                 ctx.lineTo(next.x, next.y)
             }
         }
-        ctx.fillStyle = "#000000";
+        ctx.fillStyle = this.color;
         ctx.fill()
 
     };
@@ -52,13 +64,13 @@ module.exports = Body;
         px = px - this.pos.x;
         py = py - this.pos.y;
         let tau = px * fy - py * fx;
-        let ax = fx / this.m;
-        let ay = fy / this.m;
+        let ax = fx * this.mInv;
+        let ay = fy * this.mInv;
         this.applyAcceleration(ax, ay, tau, dt)
     };
 
     Body.applyAcceleration = function (ax, ay, tau, dt) {
-        let alpha = tau / this.I;
+        let alpha = tau * this.IInv;
         this.vx += ax * dt;
         this.vy -= ay * dt;
         this.omega += alpha * dt;

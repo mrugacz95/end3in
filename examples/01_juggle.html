@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>End3in</title>
+    <title>Juggle</title>
+    <script src="../build/end3in.js"></script>
 </head>
 <body style="margin: 0;">
 
-<canvas width="1000px" height="1000px" id="canvas">
+<canvas width="1000px" height="1000px" id="canvas"></canvas>
 
-</canvas>
-<script src="../build/end3in.js"></script>
-<script lang="javascript">
+<script>
     var Engine = end3in.Engine,
         Body = end3in.Body;
     var engine = Engine.create();
@@ -19,7 +18,7 @@
     engine.start();
 
     function printMousePos(event) {
-        var click = Vec2.create(event.clientX, event.clientY).scale(1/engine.scale);
+        var click = Vec2.create(event.clientX, event.clientY).scale(1 / engine.scale);
         var force = rect1.pos.copy().sub(click).normalize().scale(2);
         rect1.applyForce(force.x, -force.y, click.x, click.y, 1);
     }

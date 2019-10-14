@@ -90,6 +90,8 @@
 
 Vec2 = {};
 
+module.exports = Vec2;
+
 (function () {
     Vec2.create = function (x, y) {
         this.x = x;
@@ -141,7 +143,11 @@ Vec2 = {};
         this.x /= len;
         this.y /= len;
         return this
-    }
+    };
+
+    Vec2.dot = function (other) {
+        return this.x * other.y - this.y * other.x;
+    };
 }());
 
 /***/ }),
@@ -167,9 +173,10 @@ module.exports = Body;
 
 (function () {
 
-    Body.rect = function (width, height, x, y) {
+    Body.rect = function (width, height, x, y, options = {}) {
+
         this.pos = Vec2.create(x, y);
-        this.rot = 1;
+        this.rot = options.rot || 0;
         this.points = [Vec2.create(-width / 2, -height / 2),
             Vec2.create(width / 2, -height / 2),
             Vec2.create(width / 2, height / 2),
@@ -179,9 +186,20 @@ module.exports = Body;
         this.vx = 0;
         this.vy = 0;
         this.omega = 0.0;
-        this.m = 0.9 * this.width * this.height;
-        this.I = this.m * (this.width * this.width + this.height + this.height) / 12;
-
+        if (options.isStatic) {
+            this.m = 0;
+            this.mInv = 0;
+            this.IInv = 0;
+        } else {
+            this.m = 0.9 * this.width * this.height;
+            this.mInv = 1.0 / this.m;
+            this.IInv = this.m * (this.width * this.width + this.height + this.height) / 12;
+        }
+        if (options.color) {
+            this.color = options.color
+        } else {
+            this.color = "#000000"
+        }
         return Object.assign({}, this)
     };
     Body.draw = function (ctx, scale) {
@@ -198,7 +216,7 @@ module.exports = Body;
                 ctx.lineTo(next.x, next.y)
             }
         }
-        ctx.fillStyle = "#000000";
+        ctx.fillStyle = this.color;
         ctx.fill()
 
     };
@@ -213,13 +231,13 @@ module.exports = Body;
         px = px - this.pos.x;
         py = py - this.pos.y;
         let tau = px * fy - py * fx;
-        let ax = fx / this.m;
-        let ay = fy / this.m;
+        let ax = fx * this.mInv;
+        let ay = fy * this.mInv;
         this.applyAcceleration(ax, ay, tau, dt)
     };
 
     Body.applyAcceleration = function (ax, ay, tau, dt) {
-        let alpha = tau / this.I;
+        let alpha = tau * this.IInv;
         this.vx += ax * dt;
         this.vy -= ay * dt;
         this.omega += alpha * dt;
@@ -268,7 +286,7 @@ module.exports = Engine;
         this.clear();
         let obj;
         for (obj of this.gameObjects) {
-            obj.applyAcceleration(0, -9.81, 0, 16 / 1000);
+            obj.applyForce(0, -9.81 * obj.m, obj.pos.x, obj.pos.y, 16 / 1000);
         }
         for (obj of this.gameObjects) {
             obj.update(16 / 1000);
@@ -285,13 +303,38 @@ module.exports = Engine;
 
 /***/ }),
 /* 4 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-Collision = {};
+__webpack_require__(0);
 
-Collision.areColliding = function (body1, body2) {
-    return false
-};
+var Collision = {};
+
+module.exports = Collision;
+
+(function () {
+    Collision.areColliding = function (body1, body2) {
+        // AABB test
+        var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        var b2Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        for (let point of body1.points) {
+            let p = point.copy().rotate(body1.rot).transpose(body1.pos.x, body1.pos.y);
+            b1X = Vec2.create(Math.min(b1X.x, p.x), Math.max(b1X.y, p.x));
+            b1Y = Vec2.create(Math.min(b1Y.x, p.y), Math.max(b1Y.y, p.y));
+        }
+        for (let point of body2.points) {
+            let p = point.copy().rotate(body2.rot).transpose(body2.pos.x, body2.pos.y);
+            b2X = Vec2.create(Math.min(b2X.x, p.x), Math.max(b2X.y, p.x));
+            b2Y = Vec2.create(Math.min(b2Y.x, p.y), Math.max(b2Y.y, p.y));
+        }
+        return b1X.x < b2X.y &&
+            b1X.y > b2X.x &&
+            b1Y.x < b2Y.y &&
+            b1Y.y > b2Y.x;
+
+    };
+}());
 
 /***/ })
 /******/ ]);
