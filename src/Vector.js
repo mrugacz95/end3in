@@ -58,4 +58,15 @@ module.exports = Vec2;
     Vec2.dot = function (other) {
         return this.x * other.y - this.y * other.x;
     };
+
+
+    Vec2.normal = function () {
+        return Vec2.create(-this.y, this.x);
+    };
+
+    Vec2.add = function(other){
+        this.x += other.x;
+        this.y += other.y;
+        return this;
+    }
 }());

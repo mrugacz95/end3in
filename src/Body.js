@@ -75,4 +75,15 @@ module.exports = Body;
         this.vy -= ay * dt;
         this.omega += alpha * dt;
     };
+
+    Body.axes = function () {
+        let result = [];
+        for (let i = 0; i < this.points.length; i++) {
+            let first = this.points[i].copy().rotate(this.rot);
+            let second = this.points[(i + 1) % this.points.length].copy().rotate(this.rot);
+            let normal = first.sub(second);
+            result.push(normal)
+        }
+        return result;
+    }
 }());

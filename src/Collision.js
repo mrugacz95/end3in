@@ -27,4 +27,37 @@ module.exports = Collision;
             b1Y.y > b2Y.x;
 
     };
+
+    Collision.calculateSAT = function (body1, body2) {
+        function project(axis, body) {
+            let min = Number.MAX_VALUE;
+            let max = -Number.MAX_VALUE;
+            for (let point of body.points) {
+                let projection = point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
+                min = Math.min(min, projection);
+                max = Math.max(max, projection);
+            }
+            return Vec2.create(min, max);
+        }
+
+        for (let axis of body1.axes()) {
+            let normal = axis.normal().normalize();
+            let b1Proj = project(normal, body1);
+            let b2Proj = project(normal, body2);
+            if (b1Proj.y < b2Proj.x ||
+                b1Proj.x > b2Proj.y) {
+                return false
+            }
+        }
+        for (let axis of body2.axes()) {
+            let normal = axis.normal().normalize();
+            let b1Proj = project(normal, body1);
+            let b2Proj = project(normal, body2);
+            if (b1Proj.y < b2Proj.x ||
+                b1Proj.x > b2Proj.y) {
+                return false
+            }
+        }
+        return true;
+    }
 }());
