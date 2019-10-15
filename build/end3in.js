@@ -81,69 +81,386 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/main.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ "./src/Body.js":
-/*!*********************!*\
-  !*** ./src/Body.js ***!
-  \*********************/
-/*! no static exports found */
-/*! all exports used */
-/***/ (function(module, exports, __webpack_require__) {
-
-eval("__webpack_require__(/*! ./Vector */ \"./src/Vector.js\");\n\nvar Body = {};\n\nmodule.exports = Body;\n\n(function () {\n\n    Body.rect = function (width, height, x, y, options = {}) {\n\n        this.pos = Vec2.create(x, y);\n        this.rot = options.rot || 0.0;\n        this.points = [Vec2.create(-width / 2, -height / 2),\n            Vec2.create(width / 2, -height / 2),\n            Vec2.create(width / 2, height / 2),\n            Vec2.create(-width / 2, height / 2)];\n        this.width = width;\n        this.height = height;\n        this.vx = 0;\n        this.vy = 0;\n        this.omega = 0.0;\n        if (options.isStatic) {\n            this.m = 0;\n            this.mInv = 0;\n            this.IInv = 0;\n        } else {\n            this.m = 0.9 * this.width * this.height;\n            this.mInv = 1.0 / this.m;\n            this.IInv = this.m * (this.width * this.width + this.height + this.height) / 12;\n        }\n        if (options.color) {\n            this.color = options.color\n        } else {\n            this.color = \"#000000\"\n        }\n        return Object.assign({}, this)\n    };\n    Body.draw = function (ctx, scale) {\n        ctx.beginPath();\n        for (let i = 0; i < this.points.length + 1; i++) {\n            let next = this.points[i % this.points.length]\n                .copy()\n                .rotate(this.rot)\n                .scale(scale)\n                .transpose(this.pos.x * scale, this.pos.y * scale);\n            if (i === 0) {\n                ctx.moveTo(next.x, next.y);\n            } else {\n                ctx.lineTo(next.x, next.y)\n            }\n        }\n        ctx.fillStyle = this.color;\n        ctx.fill()\n\n    };\n\n    Body.update = function (dt) {\n        this.pos.x += this.vx * dt;\n        this.pos.y += this.vy * dt;\n        this.rot += this.omega * dt;\n    };\n\n    Body.applyForce = function (fx, fy, px, py, dt) {\n        px = px - this.pos.x;\n        py = py - this.pos.y;\n        let tau = px * fy - py * fx;\n        let ax = fx * this.mInv;\n        let ay = fy * this.mInv;\n        this.applyAcceleration(ax, ay, tau, dt)\n    };\n\n    Body.applyAcceleration = function (ax, ay, tau, dt) {\n        let alpha = tau * this.IInv;\n        this.vx += ax * dt;\n        this.vy -= ay * dt;\n        this.omega += alpha * dt;\n    };\n\n    Body.axes = function () {\n        let result = [];\n        for (let i = 0; i < this.points.length; i++) {\n            let first = this.points[i].copy().rotate(this.rot);\n            let second = this.points[(i + 1) % this.points.length].copy().rotate(this.rot);\n            let normal = first.sub(second);\n            result.push(normal)\n        }\n        return result;\n    }\n}());\n\n//# sourceURL=webpack:///./src/Body.js?");
-
-/***/ }),
-
-/***/ "./src/Collision.js":
-/*!**************************!*\
-  !*** ./src/Collision.js ***!
-  \**************************/
-/*! no static exports found */
-/*! all exports used */
-/***/ (function(module, exports, __webpack_require__) {
-
-eval("__webpack_require__(/*! ./Vector */ \"./src/Vector.js\");\n\nvar Collision = {};\n\nmodule.exports = Collision;\n\n(function () {\n    Collision.areColliding = function (body1, body2) {\n        // AABB test\n        var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);\n        var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);\n        var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);\n        var b2Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);\n        for (let point of body1.points) {\n            let p = point.copy().rotate(body1.rot).transpose(body1.pos.x, body1.pos.y);\n            b1X = Vec2.create(Math.min(b1X.x, p.x), Math.max(b1X.y, p.x));\n            b1Y = Vec2.create(Math.min(b1Y.x, p.y), Math.max(b1Y.y, p.y));\n        }\n        for (let point of body2.points) {\n            let p = point.copy().rotate(body2.rot).transpose(body2.pos.x, body2.pos.y);\n            b2X = Vec2.create(Math.min(b2X.x, p.x), Math.max(b2X.y, p.x));\n            b2Y = Vec2.create(Math.min(b2Y.x, p.y), Math.max(b2Y.y, p.y));\n        }\n        return b1X.x < b2X.y &&\n            b1X.y > b2X.x &&\n            b1Y.x < b2Y.y &&\n            b1Y.y > b2Y.x;\n\n    };\n\n    Collision.calculateSAT = function (body1, body2) {\n        function project(axis, body) {\n            let min = Number.MAX_VALUE;\n            let max = -Number.MAX_VALUE;\n            for (let point of body.points) {\n                let projection = point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);\n                min = Math.min(min, projection);\n                max = Math.max(max, projection);\n            }\n            return Vec2.create(min, max);\n        }\n\n        for (let axis of body1.axes()) {\n            let normal = axis.normal().normalize();\n            let b1Proj = project(normal, body1);\n            let b2Proj = project(normal, body2);\n            if (b1Proj.y < b2Proj.x ||\n                b1Proj.x > b2Proj.y) {\n                return false\n            }\n        }\n        for (let axis of body2.axes()) {\n            let normal = axis.normal().normalize();\n            let b1Proj = project(normal, body1);\n            let b2Proj = project(normal, body2);\n            if (b1Proj.y < b2Proj.x ||\n                b1Proj.x > b2Proj.y) {\n                return false\n            }\n        }\n        return true;\n    }\n}());\n\n//# sourceURL=webpack:///./src/Collision.js?");
-
-/***/ }),
-
-/***/ "./src/Engine.js":
-/*!***********************!*\
-  !*** ./src/Engine.js ***!
-  \***********************/
-/*! no static exports found */
-/*! all exports used */
+/******/ ([
+/* 0 */
 /***/ (function(module, exports) {
 
-eval("var Engine = {};\n\nmodule.exports = Engine;\n\n(function () {\n\n    Engine.create = function () {\n        this.canvas = document.getElementById('canvas');\n        this.ctx = canvas.getContext('2d');\n        this.scale = 60;\n\n        this.width = 10 * this.scale;\n        this.height = 10 * this.scale;\n\n        this.canvas.width = this.width;\n        this.canvas.height = this.height;\n\n        this.gameObjects = [];\n        return Object.assign({}, this)\n    };\n\n    Engine.start = function () {\n        self = this;\n        window.setInterval(function () {\n            self.update.call(self)\n        }, 16);\n    };\n\n    Engine.clear = function () {\n        this.ctx.fillStyle = \"#FFFFFF\";\n        this.ctx.fillRect(0, 0, this.width, this.height);\n        this.ctx.fillStyle = \"#000000\";\n    };\n\n    Engine.update = function () {\n        this.clear();\n        let obj;\n        for (obj of this.gameObjects) {\n            obj.applyForce(0, -9.81 * obj.m, obj.pos.x, obj.pos.y, 16 / 1000);\n        }\n        for (obj of this.gameObjects) {\n            obj.update(16 / 1000);\n        }\n        for (obj of this.gameObjects) {\n            obj.draw(this.ctx, this.scale);\n        }\n    };\n\n    Engine.addBody = function (body) {\n        this.gameObjects.push(body);\n    };\n}());\n\n//# sourceURL=webpack:///./src/Engine.js?");
+Vec2 = {};
+
+module.exports = Vec2;
+
+(function () {
+    Vec2.create = function (x, y) {
+        this.x = x;
+        this.y = y;
+        return Object.assign({}, this)
+    };
+
+
+    Vec2.transpose = function (x, y) {
+        this.x += x;
+        this.y += y;
+        return this
+    };
+
+    Vec2.rotate = function (theta) {
+        let rotatedX = this.x * Math.cos(theta) - this.y * Math.sin(theta);
+        let rotatedY = this.x * Math.sin(theta) + this.y * Math.cos(theta);
+        this.x = rotatedX;
+        this.y = rotatedY;
+        return this
+    };
+
+    Vec2.copy = function () {
+        return Vec2.create(this.x, this.y)
+    };
+
+    Vec2.scale = function (s) {
+        this.x *= s;
+        this.y *= s;
+        return this
+    };
+
+    Vec2.sqrtMagnitude = function () {
+        return Math.sqrt(this.magnitude());
+    };
+
+    Vec2.magnitude = function () {
+        return this.x * this.x + this.y * this.y;
+    };
+
+    Vec2.sub = function (other) {
+        this.x -= other.x;
+        this.y -= other.y;
+        return this;
+    };
+
+    Vec2.normalize = function () {
+        let len = this.sqrtMagnitude();
+        this.x /= len;
+        this.y /= len;
+        return this
+    };
+
+    Vec2.dot = function (other) {
+        return this.x * other.y - this.y * other.x;
+    };
+
+
+    Vec2.normal = function () {
+        return Vec2.create(-this.y, this.x);
+    };
+
+    Vec2.add = function(other){
+        this.x += other.x;
+        this.y += other.y;
+        return this;
+    }
+}());
 
 /***/ }),
-
-/***/ "./src/Vector.js":
-/*!***********************!*\
-  !*** ./src/Vector.js ***!
-  \***********************/
-/*! no static exports found */
-/*! all exports used */
-/***/ (function(module, exports) {
-
-eval("Vec2 = {};\n\nmodule.exports = Vec2;\n\n(function () {\n    Vec2.create = function (x, y) {\n        this.x = x;\n        this.y = y;\n        return Object.assign({}, this)\n    };\n\n\n    Vec2.transpose = function (x, y) {\n        this.x += x;\n        this.y += y;\n        return this\n    };\n\n    Vec2.rotate = function (theta) {\n        let rotatedX = this.x * Math.cos(theta) - this.y * Math.sin(theta);\n        let rotatedY = this.x * Math.sin(theta) + this.y * Math.cos(theta);\n        this.x = rotatedX;\n        this.y = rotatedY;\n        return this\n    };\n\n    Vec2.copy = function () {\n        return Vec2.create(this.x, this.y)\n    };\n\n    Vec2.scale = function (s) {\n        this.x *= s;\n        this.y *= s;\n        return this\n    };\n\n    Vec2.sqrtMagnitude = function () {\n        return Math.sqrt(this.magnitude());\n    };\n\n    Vec2.magnitude = function () {\n        return this.x * this.x + this.y * this.y;\n    };\n\n    Vec2.sub = function (other) {\n        this.x -= other.x;\n        this.y -= other.y;\n        return this;\n    };\n\n    Vec2.normalize = function () {\n        let len = this.sqrtMagnitude();\n        this.x /= len;\n        this.y /= len;\n        return this\n    };\n\n    Vec2.dot = function (other) {\n        return this.x * other.y - this.y * other.x;\n    };\n\n\n    Vec2.normal = function () {\n        return Vec2.create(-this.y, this.x);\n    };\n\n    Vec2.add = function(other){\n        this.x += other.x;\n        this.y += other.y;\n        return this;\n    }\n}());\n\n//# sourceURL=webpack:///./src/Vector.js?");
-
-/***/ }),
-
-/***/ "./src/main.js":
-/*!*********************!*\
-  !*** ./src/main.js ***!
-  \*********************/
-/*! no static exports found */
-/*! all exports used */
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-eval("end3in = {};\n\nend3in.Vector = __webpack_require__(/*! ./Vector */ \"./src/Vector.js\");\nend3in.Body = __webpack_require__(/*! ./Body */ \"./src/Body.js\");\nend3in.Engine = __webpack_require__(/*! ./Engine */ \"./src/Engine.js\");\nend3in.Collision = __webpack_require__(/*! ./Collision */ \"./src/Collision.js\");\n\n//# sourceURL=webpack:///./src/main.js?");
+end3in = {};
+
+end3in.Vector = __webpack_require__(0);
+end3in.Body = __webpack_require__(2);
+end3in.Engine = __webpack_require__(3);
+end3in.Collision = __webpack_require__(4);
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(0);
+
+var Body = {};
+
+module.exports = Body;
+
+(function () {
+
+    Body.setDefaults = function () {
+
+    };
+
+    Body.rect = function (width, height, x, y, options = {}) {
+        this.pos = Vec2.create(x, y);
+        this.rot = options.rot || 0.0;
+        this.points = [Vec2.create(-width / 2, -height / 2),
+            Vec2.create(width / 2, -height / 2),
+            Vec2.create(width / 2, height / 2),
+            Vec2.create(-width / 2, height / 2)];
+        this.width = width;
+        this.height = height;
+        this.vx = 0;
+        this.vy = 0;
+        this.omega = 0.0;
+        if (options.isStatic) {
+            this.m = 0;
+            this.mInv = 0;
+            this.IInv = 0;
+        } else {
+            this.m = 0.9 * this.width * this.height;
+            this.mInv = 1.0 / this.m;
+            this.IInv = this.m * (this.width * this.width + this.height + this.height) / 12;
+        }
+        if (options.color) {
+            this.color = options.color
+        } else {
+            this.color = "#000000"
+        }
+        return Object.assign({}, this)
+    };
+
+    Body.polygon = function (vertices, x, y, options = {}) {
+        this.pos = Vec2.create(x, y);
+        this.rot = options.rot || 0.0;
+        this.points = [];
+        let meanX = vertices.map((o) => o[0]).reduce((p, c) => p + c, 0) / vertices.length;
+        let meanY = vertices.map((o) => o[1]).reduce((p, c) => p + c, 0) / vertices.length;
+        for (let pair of vertices) {
+            this.points.push(Vec2.create(pair[0] - meanX, pair[1] - meanY));
+        }
+        this.vx = 0;
+        this.vy = 0;
+        this.omega = 0.0;
+        if (options.isStatic) {
+            this.m = 0;
+            this.mInv = 0;
+            this.IInv = 0;
+        } else {
+            this.m = 0;
+            var last = this.points[this.points.length - 1];
+            for (let point of this.points) {
+                this.m += (last.x + point.y) * (last.y - point.x);
+                last = point
+            }
+            this.m = Math.abs(this.m / 2.0);
+            this.mInv = 1.0 / this.m;
+            this.IInv = 2 / (this.m * Math.max.apply(this.points.map((v) => (v.length))));
+        }
+        if (options.color) {
+            this.color = options.color
+        } else {
+            this.color = "#000000"
+        }
+        return Object.assign({}, this)
+    };
+
+    Body.draw = function (ctx, scale) {
+        ctx.beginPath();
+        for (let i = 0; i < this.points.length + 1; i++) {
+            let next = this.points[i % this.points.length]
+                .copy()
+                .rotate(this.rot)
+                .scale(scale)
+                .transpose(this.pos.x * scale, this.pos.y * scale);
+            if (i === 0) {
+                ctx.moveTo(next.x, next.y);
+            } else {
+                ctx.lineTo(next.x, next.y)
+            }
+        }
+        ctx.fillStyle = this.color;
+        ctx.fill()
+
+    };
+
+    Body.update = function (dt) {
+        this.pos.x += this.vx * dt;
+        this.pos.y += this.vy * dt;
+        this.rot += this.omega * dt;
+    };
+
+    Body.applyForce = function (fx, fy, px, py, dt) {
+        px = px - this.pos.x;
+        py = py - this.pos.y;
+        let tau = px * fy - py * fx;
+        let ax = fx * this.mInv;
+        let ay = fy * this.mInv;
+        this.applyAcceleration(ax, ay, tau, dt)
+    };
+
+    Body.applyAcceleration = function (ax, ay, tau, dt) {
+        let alpha = tau * this.IInv;
+        this.vx += ax * dt;
+        this.vy -= ay * dt;
+        this.omega += alpha * dt;
+    };
+
+    Body.axes = function () {
+        let result = [];
+        for (let i = 0; i < this.points.length; i++) {
+            let first = this.points[i].copy();
+            let second = this.points[(i + 1) % this.points.length].copy();
+            let normal = first.sub(second);
+            result.push(normal)
+        }
+        return result;
+    }
+}());
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+var Engine = {};
+
+module.exports = Engine;
+
+(function () {
+
+    Engine.create = function () {
+        this.canvas = document.getElementById('canvas');
+        this.ctx = canvas.getContext('2d');
+        this.scale = 60;
+        this.cameraPos = Vec2.create(3, 3);
+
+        this.width = 10 * this.scale;
+        this.height = 10 * this.scale;
+
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+
+        this.gameObjects = [];
+        return Object.assign({}, this)
+    };
+
+    Engine.start = function () {
+        self = this;
+        window.setInterval(function () {
+            self.update.call(self)
+        }, 16);
+    };
+
+    Engine.clear = function () {
+        this.ctx.fillStyle = "#FFFFFF";
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.fillStyle = "#000000";
+    };
+
+    Engine.update = function () {
+        this.clear();
+        for (let obj of this.gameObjects) {
+            obj.applyForce(0, -9.81 * obj.m, obj.pos.x, obj.pos.y, 16 / 1000);
+        }
+        for (let obj of this.gameObjects) {
+            obj.update(16 / 1000);
+        }
+        this.draw();
+    };
+
+    Engine.draw = function () {
+        this.ctx.save();
+        this.ctx.translate(this.cameraPos.x * this.scale, this.cameraPos.y * this.scale);
+        for (let obj of this.gameObjects) {
+            obj.draw(this.ctx, this.scale);
+        }
+        this.ctx.restore()
+    };
+
+    Engine.addBody = function (body) {
+        this.gameObjects.push(body);
+    };
+}());
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(0);
+
+var Collision = {};
+
+module.exports = Collision;
+
+(function () {
+    Collision.areColliding = function (body1, body2) {
+        // AABB test
+        var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        var b2Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        for (let point of body1.points) {
+            let p = point.copy().rotate(body1.rot).transpose(body1.pos.x, body1.pos.y);
+            b1X = Vec2.create(Math.min(b1X.x, p.x), Math.max(b1X.y, p.x));
+            b1Y = Vec2.create(Math.min(b1Y.x, p.y), Math.max(b1Y.y, p.y));
+        }
+        for (let point of body2.points) {
+            let p = point.copy().rotate(body2.rot).transpose(body2.pos.x, body2.pos.y);
+            b2X = Vec2.create(Math.min(b2X.x, p.x), Math.max(b2X.y, p.x));
+            b2Y = Vec2.create(Math.min(b2Y.x, p.y), Math.max(b2Y.y, p.y));
+        }
+        return b1X.x < b2X.y &&
+            b1X.y > b2X.x &&
+            b1Y.x < b2Y.y &&
+            b1Y.y > b2Y.x;
+
+    };
+
+    Collision.calculateSAT = function (body1, body2, options) {
+        let context = options.context;
+        let debug = options.debug || false;
+
+        function project(axis, body) {
+            let min = Number.MAX_VALUE;
+            let max = -Number.MAX_VALUE;
+            for (let point of body.points) {
+                let projection = point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
+                min = Math.min(min, projection);
+                max = Math.max(max, projection);
+            }
+            return Vec2.create(min, max);
+        }
+
+        function drawNormal(normal) {
+            context.strokeStyle = "#000";
+            context.lineWidth = 1;
+            normal = normal.copy().normal();
+            context.beginPath();
+            let axisStart = normal.copy().scale(-10 * engine.scale);
+            context.moveTo(axisStart.x, axisStart.y);
+            let axisEnd = normal.copy().scale(10 * engine.scale);
+            context.lineTo(axisEnd.x, axisEnd.y);
+            context.stroke();
+        }
+
+        function drawProjection(normal, body, proj, color) {
+            context.strokeStyle = color;
+            context.lineWidth = 8;
+            normal = normal.copy().normal();
+            context.beginPath();
+            let axisStart = normal.copy().scale(proj.y * -engine.scale);
+            context.moveTo(axisStart.x, axisStart.y);
+            let axisEnd = normal.copy().scale(proj.x * -engine.scale);
+            context.lineTo(axisEnd.x, axisEnd.y);
+            context.stroke();
+        }
+
+        for (let body of [body1, body2]) {
+            for (let axis of body.axes()) {
+                let normal = axis.rotate(body.rot).normalize();
+                let b1Proj = project(normal, body1);
+                let b2Proj = project(normal, body2);
+                if (debug) {
+                    drawNormal(normal);
+                    drawProjection(normal, body1, b1Proj, "#FF0000");
+                    drawProjection(normal, body2, b2Proj, "#00FF00");
+                }
+                if (b1Proj.y <= b2Proj.x ||
+                    b1Proj.x >= b2Proj.y) {
+                    return false
+                }
+            }
+        }
+        return true;
+    }
+}());
 
 /***/ })
-
-/******/ });
+/******/ ]);

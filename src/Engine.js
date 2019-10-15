@@ -8,6 +8,7 @@ module.exports = Engine;
         this.canvas = document.getElementById('canvas');
         this.ctx = canvas.getContext('2d');
         this.scale = 60;
+        this.cameraPos = Vec2.create(3, 3);
 
         this.width = 10 * this.scale;
         this.height = 10 * this.scale;
@@ -34,16 +35,22 @@ module.exports = Engine;
 
     Engine.update = function () {
         this.clear();
-        let obj;
-        for (obj of this.gameObjects) {
+        for (let obj of this.gameObjects) {
             obj.applyForce(0, -9.81 * obj.m, obj.pos.x, obj.pos.y, 16 / 1000);
         }
-        for (obj of this.gameObjects) {
+        for (let obj of this.gameObjects) {
             obj.update(16 / 1000);
         }
-        for (obj of this.gameObjects) {
+        this.draw();
+    };
+
+    Engine.draw = function () {
+        this.ctx.save();
+        this.ctx.translate(this.cameraPos.x * this.scale, this.cameraPos.y * this.scale);
+        for (let obj of this.gameObjects) {
             obj.draw(this.ctx, this.scale);
         }
+        this.ctx.restore()
     };
 
     Engine.addBody = function (body) {

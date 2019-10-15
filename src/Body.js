@@ -6,8 +6,11 @@ module.exports = Body;
 
 (function () {
 
-    Body.rect = function (width, height, x, y, options = {}) {
+    Body.setDefaults = function () {
 
+    };
+
+    Body.rect = function (width, height, x, y, options = {}) {
         this.pos = Vec2.create(x, y);
         this.rot = options.rot || 0.0;
         this.points = [Vec2.create(-width / 2, -height / 2),
@@ -35,6 +38,42 @@ module.exports = Body;
         }
         return Object.assign({}, this)
     };
+
+    Body.polygon = function (vertices, x, y, options = {}) {
+        this.pos = Vec2.create(x, y);
+        this.rot = options.rot || 0.0;
+        this.points = [];
+        let meanX = vertices.map((o) => o[0]).reduce((p, c) => p + c, 0) / vertices.length;
+        let meanY = vertices.map((o) => o[1]).reduce((p, c) => p + c, 0) / vertices.length;
+        for (let pair of vertices) {
+            this.points.push(Vec2.create(pair[0] - meanX, pair[1] - meanY));
+        }
+        this.vx = 0;
+        this.vy = 0;
+        this.omega = 0.0;
+        if (options.isStatic) {
+            this.m = 0;
+            this.mInv = 0;
+            this.IInv = 0;
+        } else {
+            this.m = 0;
+            var last = this.points[this.points.length - 1];
+            for (let point of this.points) {
+                this.m += (last.x + point.y) * (last.y - point.x);
+                last = point
+            }
+            this.m = Math.abs(this.m / 2.0);
+            this.mInv = 1.0 / this.m;
+            this.IInv = 2 / (this.m * Math.max.apply(this.points.map((v) => (v.length))));
+        }
+        if (options.color) {
+            this.color = options.color
+        } else {
+            this.color = "#000000"
+        }
+        return Object.assign({}, this)
+    };
+
     Body.draw = function (ctx, scale) {
         ctx.beginPath();
         for (let i = 0; i < this.points.length + 1; i++) {
@@ -79,8 +118,8 @@ module.exports = Body;
     Body.axes = function () {
         let result = [];
         for (let i = 0; i < this.points.length; i++) {
-            let first = this.points[i].copy().rotate(this.rot);
-            let second = this.points[(i + 1) % this.points.length].copy().rotate(this.rot);
+            let first = this.points[i].copy();
+            let second = this.points[(i + 1) % this.points.length].copy();
             let normal = first.sub(second);
             result.push(normal)
         }

@@ -28,7 +28,10 @@ module.exports = Collision;
 
     };
 
-    Collision.calculateSAT = function (body1, body2) {
+    Collision.calculateSAT = function (body1, body2, options) {
+        let context = options.context;
+        let debug = options.debug || false;
+
         function project(axis, body) {
             let min = Number.MAX_VALUE;
             let max = -Number.MAX_VALUE;
@@ -40,22 +43,44 @@ module.exports = Collision;
             return Vec2.create(min, max);
         }
 
-        for (let axis of body1.axes()) {
-            let normal = axis.normal().normalize();
-            let b1Proj = project(normal, body1);
-            let b2Proj = project(normal, body2);
-            if (b1Proj.y < b2Proj.x ||
-                b1Proj.x > b2Proj.y) {
-                return false
-            }
+        function drawNormal(normal) {
+            context.strokeStyle = "#000";
+            context.lineWidth = 1;
+            normal = normal.copy().normal();
+            context.beginPath();
+            let axisStart = normal.copy().scale(-10 * engine.scale);
+            context.moveTo(axisStart.x, axisStart.y);
+            let axisEnd = normal.copy().scale(10 * engine.scale);
+            context.lineTo(axisEnd.x, axisEnd.y);
+            context.stroke();
         }
-        for (let axis of body2.axes()) {
-            let normal = axis.normal().normalize();
-            let b1Proj = project(normal, body1);
-            let b2Proj = project(normal, body2);
-            if (b1Proj.y < b2Proj.x ||
-                b1Proj.x > b2Proj.y) {
-                return false
+
+        function drawProjection(normal, body, proj, color) {
+            context.strokeStyle = color;
+            context.lineWidth = 8;
+            normal = normal.copy().normal();
+            context.beginPath();
+            let axisStart = normal.copy().scale(proj.y * -engine.scale);
+            context.moveTo(axisStart.x, axisStart.y);
+            let axisEnd = normal.copy().scale(proj.x * -engine.scale);
+            context.lineTo(axisEnd.x, axisEnd.y);
+            context.stroke();
+        }
+
+        for (let body of [body1, body2]) {
+            for (let axis of body.axes()) {
+                let normal = axis.rotate(body.rot).normalize();
+                let b1Proj = project(normal, body1);
+                let b2Proj = project(normal, body2);
+                if (debug) {
+                    drawNormal(normal);
+                    drawProjection(normal, body1, b1Proj, "#FF0000");
+                    drawProjection(normal, body2, b2Proj, "#00FF00");
+                }
+                if (b1Proj.y <= b2Proj.x ||
+                    b1Proj.x >= b2Proj.y) {
+                    return false
+                }
             }
         }
         return true;
