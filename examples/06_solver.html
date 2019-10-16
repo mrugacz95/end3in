@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Solver</title>
+    <script src="../build/end3in.js"></script>
+</head>
+<body>
+
+<script>
+    function compare(arr1, arr2) {
+        let diff = 0;
+        for (let i = 0; i < arr1.length; i++) {
+            diff += Math.abs(arr1[i] - arr2[i]);
+        }
+        return diff < 0.0001
+    }
+
+    let Solver = end3in.Solver;
+
+    let mat = [[16, 3], [7, -11]];
+    let b = [11, 13];
+    let x = Solver.solve(mat, b, 6);
+    let test1 = compare(x, [0.8122, -0.6650]);
+
+
+    mat = [[4, -1, -1], [-2, 6, 1], [-1, 1, 7]];
+    b = [3, 9, -6];
+    x = Solver.solve(mat, b, 6);
+    let test2 = compare(x, [1, 2, -1]);
+    if (test1 && test2) {
+        document.body.style.background = "#00FF00"
+    }
+    else {
+        document.body.style.background = "#FF0000"
+    }
+</script>
+
+</body>
+</html>

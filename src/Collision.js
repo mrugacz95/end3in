@@ -28,7 +28,7 @@ module.exports = Collision;
 
     };
 
-    Collision.calculateSAT = function (body1, body2, options) {
+    Collision.calculateSAT = function (body1, body2, options = {}) {
         let context = options.context;
         let debug = options.debug || false;
 
@@ -55,9 +55,9 @@ module.exports = Collision;
             context.stroke();
         }
 
-        function drawProjection(normal, body, proj, color) {
+        function drawProjection(normal, body, proj, color, width) {
             context.strokeStyle = color;
-            context.lineWidth = 8;
+            context.lineWidth = width;
             normal = normal.copy().normal();
             context.beginPath();
             let axisStart = normal.copy().scale(proj.y * -engine.scale);
@@ -67,6 +67,8 @@ module.exports = Collision;
             context.stroke();
         }
 
+        let mtvAxis = null;
+        let mtvLength = Number.MAX_VALUE;
         for (let body of [body1, body2]) {
             for (let axis of body.axes()) {
                 let normal = axis.rotate(body.rot).normalize();
@@ -74,15 +76,26 @@ module.exports = Collision;
                 let b2Proj = project(normal, body2);
                 if (debug) {
                     drawNormal(normal);
-                    drawProjection(normal, body1, b1Proj, "#FF0000");
-                    drawProjection(normal, body2, b2Proj, "#00FF00");
+                    drawProjection(normal, body1, b1Proj, "#FF0000", 10);
+                    drawProjection(normal, body2, b2Proj, "#00FF00", 8);
                 }
+                // check overlap
                 if (b1Proj.y <= b2Proj.x ||
                     b1Proj.x >= b2Proj.y) {
                     return false
                 }
+                let overlap = 0;
+                if (b1Proj.x < b2Proj.x) {
+                    overlap = b1Proj.y - b2Proj.x;
+                } else {
+                    overlap = b2Proj.y - b1Proj.x;
+                }
+                if (overlap < mtvLength) {
+                    mtvLength = overlap;
+                    mtvAxis = normal;
+                }
             }
         }
-        return true;
+        return {'normal': mtvAxis, 'length': mtvLength};
     }
 }());

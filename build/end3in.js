@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -165,15 +165,122 @@ module.exports = Vec2;
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-end3in = {};
+__webpack_require__(0);
 
-end3in.Vector = __webpack_require__(0);
-end3in.Body = __webpack_require__(2);
-end3in.Engine = __webpack_require__(3);
-end3in.Collision = __webpack_require__(4);
+var Collision = {};
+
+module.exports = Collision;
+
+(function () {
+    Collision.areColliding = function (body1, body2) {
+        // AABB test
+        var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        var b2Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+        for (let point of body1.points) {
+            let p = point.copy().rotate(body1.rot).transpose(body1.pos.x, body1.pos.y);
+            b1X = Vec2.create(Math.min(b1X.x, p.x), Math.max(b1X.y, p.x));
+            b1Y = Vec2.create(Math.min(b1Y.x, p.y), Math.max(b1Y.y, p.y));
+        }
+        for (let point of body2.points) {
+            let p = point.copy().rotate(body2.rot).transpose(body2.pos.x, body2.pos.y);
+            b2X = Vec2.create(Math.min(b2X.x, p.x), Math.max(b2X.y, p.x));
+            b2Y = Vec2.create(Math.min(b2Y.x, p.y), Math.max(b2Y.y, p.y));
+        }
+        return b1X.x < b2X.y &&
+            b1X.y > b2X.x &&
+            b1Y.x < b2Y.y &&
+            b1Y.y > b2Y.x;
+
+    };
+
+    Collision.calculateSAT = function (body1, body2, options = {}) {
+        let context = options.context;
+        let debug = options.debug || false;
+
+        function project(axis, body) {
+            let min = Number.MAX_VALUE;
+            let max = -Number.MAX_VALUE;
+            for (let point of body.points) {
+                let projection = point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
+                min = Math.min(min, projection);
+                max = Math.max(max, projection);
+            }
+            return Vec2.create(min, max);
+        }
+
+        function drawNormal(normal) {
+            context.strokeStyle = "#000";
+            context.lineWidth = 1;
+            normal = normal.copy().normal();
+            context.beginPath();
+            let axisStart = normal.copy().scale(-10 * engine.scale);
+            context.moveTo(axisStart.x, axisStart.y);
+            let axisEnd = normal.copy().scale(10 * engine.scale);
+            context.lineTo(axisEnd.x, axisEnd.y);
+            context.stroke();
+        }
+
+        function drawProjection(normal, body, proj, color, width) {
+            context.strokeStyle = color;
+            context.lineWidth = width;
+            normal = normal.copy().normal();
+            context.beginPath();
+            let axisStart = normal.copy().scale(proj.y * -engine.scale);
+            context.moveTo(axisStart.x, axisStart.y);
+            let axisEnd = normal.copy().scale(proj.x * -engine.scale);
+            context.lineTo(axisEnd.x, axisEnd.y);
+            context.stroke();
+        }
+
+        let mtvAxis = null;
+        let mtvLength = Number.MAX_VALUE;
+        for (let body of [body1, body2]) {
+            for (let axis of body.axes()) {
+                let normal = axis.rotate(body.rot).normalize();
+                let b1Proj = project(normal, body1);
+                let b2Proj = project(normal, body2);
+                if (debug) {
+                    drawNormal(normal);
+                    drawProjection(normal, body1, b1Proj, "#FF0000", 10);
+                    drawProjection(normal, body2, b2Proj, "#00FF00", 8);
+                }
+                // check overlap
+                if (b1Proj.y <= b2Proj.x ||
+                    b1Proj.x >= b2Proj.y) {
+                    return false
+                }
+                let overlap = 0;
+                if (b1Proj.x < b2Proj.x) {
+                    overlap = b1Proj.y - b2Proj.x;
+                } else {
+                    overlap = b2Proj.y - b1Proj.x;
+                }
+                if (overlap < mtvLength) {
+                    mtvLength = overlap;
+                    mtvAxis = normal;
+                }
+            }
+        }
+        return {'normal': mtvAxis, 'length': mtvLength};
+    }
+}());
 
 /***/ }),
 /* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+end3in = {};
+
+end3in.Vector = __webpack_require__(0);
+end3in.Body = __webpack_require__(3);
+end3in.Engine = __webpack_require__(4);
+end3in.Collision = __webpack_require__(1);
+end3in.Solver = __webpack_require__(5);
+
+/***/ }),
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(0);
@@ -306,8 +413,10 @@ module.exports = Body;
 }());
 
 /***/ }),
-/* 3 */
-/***/ (function(module, exports) {
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(1);
 
 var Engine = {};
 
@@ -320,7 +429,7 @@ module.exports = Engine;
         this.ctx = canvas.getContext('2d');
         this.scale = 60;
         this.cameraPos = Vec2.create(3, 3);
-
+        this.dt = 1 / 60;
         this.width = 10 * this.scale;
         this.height = 10 * this.scale;
 
@@ -328,6 +437,7 @@ module.exports = Engine;
         this.canvas.height = this.height;
 
         this.gameObjects = [];
+        this.newBodyId = 0;
         return Object.assign({}, this)
     };
 
@@ -335,7 +445,7 @@ module.exports = Engine;
         self = this;
         window.setInterval(function () {
             self.update.call(self)
-        }, 16);
+        }, 1000 * self.dt);
     };
 
     Engine.clear = function () {
@@ -347,10 +457,13 @@ module.exports = Engine;
     Engine.update = function () {
         this.clear();
         for (let obj of this.gameObjects) {
-            obj.applyForce(0, -9.81 * obj.m, obj.pos.x, obj.pos.y, 16 / 1000);
+            if(obj.mInv !== 0) {
+                obj.applyAcceleration(0, -9.81, 0, engine.dt);
+            }
         }
+        this.impulseSolver();
         for (let obj of this.gameObjects) {
-            obj.update(16 / 1000);
+            obj.update(this.dt);
         }
         this.draw();
     };
@@ -365,102 +478,84 @@ module.exports = Engine;
     };
 
     Engine.addBody = function (body) {
+        body.bodyId = this.newBodyId;
+        this.newBodyId += 1;
         this.gameObjects.push(body);
+    };
+
+    Engine.impulseSolver = function () {
+        for (let body1 of this.gameObjects) {
+            for (let body2 of this.gameObjects) {
+                if (body2.bodyId >= body1.bodyId) {
+                    continue;
+                }
+                let mtv = Collision.calculateSAT(body1, body2);
+                if (mtv) {
+                    let normal = mtv.normal.copy().normal().scale(mtv.length * 100);
+                    let b1normal = normal.copy().scale(body1.m);
+                    body1.applyForce(b1normal.x, b1normal.y, body1.pos.x, body1.pos.y, this.dt);
+                    let b2normal = normal.copy().scale(body2.m);
+                    body2.applyForce(b2normal.x, b2normal.y, body2.pos.x, body2.pos.y, this.dt);
+                }
+            }
+        }
     };
 }());
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 5 */
+/***/ (function(module, exports) {
 
-__webpack_require__(0);
+var Solver = {};
 
-var Collision = {};
-
-module.exports = Collision;
+module.exports = Solver;
 
 (function () {
-    Collision.areColliding = function (body1, body2) {
-        // AABB test
-        var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-        var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-        var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-        var b2Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-        for (let point of body1.points) {
-            let p = point.copy().rotate(body1.rot).transpose(body1.pos.x, body1.pos.y);
-            b1X = Vec2.create(Math.min(b1X.x, p.x), Math.max(b1X.y, p.x));
-            b1Y = Vec2.create(Math.min(b1Y.x, p.y), Math.max(b1Y.y, p.y));
-        }
-        for (let point of body2.points) {
-            let p = point.copy().rotate(body2.rot).transpose(body2.pos.x, body2.pos.y);
-            b2X = Vec2.create(Math.min(b2X.x, p.x), Math.max(b2X.y, p.x));
-            b2Y = Vec2.create(Math.min(b2Y.x, p.y), Math.max(b2Y.y, p.y));
-        }
-        return b1X.x < b2X.y &&
-            b1X.y > b2X.x &&
-            b1Y.x < b2Y.y &&
-            b1Y.y > b2Y.x;
-
-    };
-
-    Collision.calculateSAT = function (body1, body2, options) {
-        let context = options.context;
-        let debug = options.debug || false;
-
-        function project(axis, body) {
-            let min = Number.MAX_VALUE;
-            let max = -Number.MAX_VALUE;
-            for (let point of body.points) {
-                let projection = point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
-                min = Math.min(min, projection);
-                max = Math.max(max, projection);
+        Solver.solve = function (mat, b, iterations) {
+            // Ax = b
+            let x = [];
+            for (let i = 0; i < mat.length; i++) {
+                x.push(0);
             }
-            return Vec2.create(min, max);
-        }
-
-        function drawNormal(normal) {
-            context.strokeStyle = "#000";
-            context.lineWidth = 1;
-            normal = normal.copy().normal();
-            context.beginPath();
-            let axisStart = normal.copy().scale(-10 * engine.scale);
-            context.moveTo(axisStart.x, axisStart.y);
-            let axisEnd = normal.copy().scale(10 * engine.scale);
-            context.lineTo(axisEnd.x, axisEnd.y);
-            context.stroke();
-        }
-
-        function drawProjection(normal, body, proj, color) {
-            context.strokeStyle = color;
-            context.lineWidth = 8;
-            normal = normal.copy().normal();
-            context.beginPath();
-            let axisStart = normal.copy().scale(proj.y * -engine.scale);
-            context.moveTo(axisStart.x, axisStart.y);
-            let axisEnd = normal.copy().scale(proj.x * -engine.scale);
-            context.lineTo(axisEnd.x, axisEnd.y);
-            context.stroke();
-        }
-
-        for (let body of [body1, body2]) {
-            for (let axis of body.axes()) {
-                let normal = axis.rotate(body.rot).normalize();
-                let b1Proj = project(normal, body1);
-                let b2Proj = project(normal, body2);
-                if (debug) {
-                    drawNormal(normal);
-                    drawProjection(normal, body1, b1Proj, "#FF0000");
-                    drawProjection(normal, body2, b2Proj, "#00FF00");
-                }
-                if (b1Proj.y <= b2Proj.x ||
-                    b1Proj.x >= b2Proj.y) {
-                    return false
+            for (let iter = 0; iter < iterations; iter++) {
+                for (let i = 0; i < mat.length; i++) {
+                    let sum = b[i];
+                    for (let j = 0; j < mat[i].length; j++) {
+                        if (j !== i) {
+                            sum -= x[j] * mat[i][j];
+                        }
+                    }
+                    x[i] = sum / mat[i][i];
                 }
             }
+            return x;
+        };
+        Solver.getUpper = function (mat) {
+            let upper = [];
+            let lower = [];
+            for (let row = 0; row < mat.length; row++) {
+                let newLowerRow = [];
+                let newUpperRow = [];
+                for (let col = 0; col < max[row].length; col++) {
+                    if (row >= col) {
+                        newUpperRow.push(mat[row][col]);
+                        newLowerRow.push(0)
+                    } else {
+                        newUpperRow.push(0);
+                        newLowerRow.push(mat[row][col]);
+                    }
+                }
+                upper.push(newUpperRow);
+                lower.push(newLowerRow);
+            }
+            return {'lower': lower, 'upper': upper};
         }
-        return true;
+
+
     }
-}());
+    ()
+)
+;
 
 /***/ })
 /******/ ]);
