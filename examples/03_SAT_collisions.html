@@ -22,7 +22,7 @@
     engine.start();
     document.onmousemove = function (event) {
         rect1.pos = Vec2.create(event.clientX / engine.scale, event.clientY / engine.scale).sub(engine.cameraPos);;
-        if (Collision.calculateSAT(rect1, rect2)) {
+        if (Collision.calculateSAT(rect1, rect2, {'debug': true, 'context': engine.ctx})) {
             rect1.color = "#e62131EE";
         } else {
             rect1.color = "#141ae6EE";

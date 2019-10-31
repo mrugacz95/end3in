@@ -6,7 +6,7 @@ module.exports = Engine;
 
 (function () {
 
-    Engine.create = function () {
+    Engine.create = function (debug = false) {
         this.canvas = document.getElementById('canvas');
         this.ctx = canvas.getContext('2d');
         this.scale = 60;
@@ -14,7 +14,7 @@ module.exports = Engine;
         this.dt = 1 / 60;
         this.width = 10 * this.scale;
         this.height = 10 * this.scale;
-
+        this.debug = debug;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
 
@@ -43,7 +43,7 @@ module.exports = Engine;
                 obj.applyAcceleration(0, -9.81, 0, engine.dt);
             }
         }
-        this.impulseSolver();
+        // this.impulseSolver();
         for (let obj of this.gameObjects) {
             obj.update(this.dt);
         }
@@ -52,9 +52,10 @@ module.exports = Engine;
 
     Engine.draw = function () {
         this.ctx.save();
-        this.ctx.translate(this.cameraPos.x * this.scale, this.cameraPos.y * this.scale);
+        this.ctx.scale(this.scale, this.scale);
+        this.ctx.translate(this.cameraPos.x, this.cameraPos.y);
         for (let obj of this.gameObjects) {
-            obj.draw(this.ctx, this.scale);
+            obj.draw(this.ctx, this.debug);
         }
         this.ctx.restore()
     };

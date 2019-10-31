@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shapes</title>
+    <script src="../build/end3in.js"></script>
+</head>
+<body style="margin: 0;">
+
+<canvas height="1000px" id="canvas" width="1000px"></canvas>
+<script>
+    var Engine = end3in.Engine,
+        Body = end3in.Body,
+        Collision = end3in.Collision;
+    let engine = Engine.create();
+    var rect1 = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
+        'isStatic': true,
+        'color': "#141ae6EE",
+        "rot": 0
+    }); // Math.PI / 4
+    var polygon2 = Body.rect(2,2,
+        3.3, 2.0, {
+            'isStatic': true,
+            'color': "#141ae6EE",
+            "rot": Math.PI / 6
+        });
+    engine.addBody(rect1);
+    engine.addBody(polygon2);
+    var clear = engine.clear;
+    var draw = engine.draw;
+    engine.clear = function () {
+    };
+    engine.draw = function () {
+    };
+    engine.start();
+
+    document.onmousemove = function (event) {
+        clear.call(engine);
+        draw.call(engine);
+        let mouse = Vec2.create(event.clientX / engine.scale, event.clientY / engine.scale).sub(engine.cameraPos);
+        rect1.pos = mouse;
+        // if (rect1.isInside(mouse)) {
+        //     rect1.color = "#e62131EE";
+        // } else {
+        //     rect1.color = "#2736E6";
+        // }
+        // if (polygon1.isInside(mouse)) {
+        //     polygon1.color = "#e62131EE";
+        // } else {
+        //     polygon1.color = "#2736E6";
+        // }
+        if (polygon2.isInside(mouse)) {
+            polygon2.color = "#e62131EE";
+        } else {
+            polygon2.color = "#2736E6";
+        }
+    }
+
+</script>
+
+</body>
+</html>

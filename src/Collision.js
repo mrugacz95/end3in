@@ -6,7 +6,6 @@ module.exports = Collision;
 
 (function () {
     Collision.areColliding = function (body1, body2) {
-        // AABB test
         var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
         var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
         var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
@@ -29,18 +28,30 @@ module.exports = Collision;
     };
 
     Collision.calculateSAT = function (body1, body2, options = {}) {
-        let context = options.context;
+        let context = !options.debug || options.context;
         let debug = options.debug || false;
 
-        function project(axis, body) {
+        function projectPoint(axis, point, body) {
+            return point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
+        }
+
+        function projectBody(axis, body) {
             let min = Number.MAX_VALUE;
+            let minPoint;
             let max = -Number.MAX_VALUE;
+            let maxPoint;
             for (let point of body.points) {
-                let projection = point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
-                min = Math.min(min, projection);
-                max = Math.max(max, projection);
+                let projection = projectPoint(axis, point, body);
+                if (min > projection) {
+                    min = projection;
+                    minPoint = point.copy();
+                }
+                if (max < projection) {
+                    max = projection;
+                    maxPoint = point.copy();
+                }
             }
-            return Vec2.create(min, max);
+            return {"min": min, "max": max, "minPoint": minPoint, "maxPoint": maxPoint};
         }
 
         function drawNormal(normal) {
@@ -60,42 +71,120 @@ module.exports = Collision;
             context.lineWidth = width;
             normal = normal.copy().normal();
             context.beginPath();
-            let axisStart = normal.copy().scale(proj.y * -engine.scale);
+            let axisStart = normal.copy().scale(proj.max * -engine.scale);
             context.moveTo(axisStart.x, axisStart.y);
-            let axisEnd = normal.copy().scale(proj.x * -engine.scale);
+            let axisEnd = normal.copy().scale(proj.min * -engine.scale);
             context.lineTo(axisEnd.x, axisEnd.y);
             context.stroke();
         }
 
         let mtvAxis = null;
         let mtvLength = Number.MAX_VALUE;
-        for (let body of [body1, body2]) {
-            for (let axis of body.axes()) {
+        let refP1;
+        let refP2;
+        let incP1;
+        let incP2;
+        let incidentBody;
+        let referenceBody;
+        for (let bodies of [[body1, body2], [body2, body1]]) {
+            let body = bodies[0];
+            let other = bodies[1];
+            for (let axisWithPoints of body.axes()) {
+                let axis = axisWithPoints.axis;
+
                 let normal = axis.rotate(body.rot).normalize();
-                let b1Proj = project(normal, body1);
-                let b2Proj = project(normal, body2);
+                let bProj = projectBody(normal, body);
+                let oProj = projectBody(normal, other);
                 if (debug) {
                     drawNormal(normal);
-                    drawProjection(normal, body1, b1Proj, "#FF0000", 10);
-                    drawProjection(normal, body2, b2Proj, "#00FF00", 8);
+                    drawProjection(normal, body, bProj, "#FF0000", 10);
+                    drawProjection(normal, other, oProj, "#00FF00", 8);
                 }
                 // check overlap
-                if (b1Proj.y <= b2Proj.x ||
-                    b1Proj.x >= b2Proj.y) {
+                if (bProj.max <= oProj.min ||
+                    bProj.min >= oProj.max) {
                     return false
                 }
                 let overlap = 0;
-                if (b1Proj.x < b2Proj.x) {
-                    overlap = b1Proj.y - b2Proj.x;
+
+                if (bProj.min < oProj.min) {
+                    overlap = bProj.max - oProj.min;
                 } else {
-                    overlap = b2Proj.y - b1Proj.x;
+                    overlap = oProj.max - bProj.min;
                 }
                 if (overlap < mtvLength) {
                     mtvLength = overlap;
                     mtvAxis = normal;
+                    referenceBody = body;
+                    refP1 = axisWithPoints.p1.copy();
+                    refP2 = axisWithPoints.p2.copy();
+                    incidentBody = other;
+                    incP1 = oProj.minPoint.copy();
+                    incP2 = oProj.maxPoint.copy();
+
                 }
             }
         }
-        return {'normal': mtvAxis, 'length': mtvLength};
+        let penetratingPointInWorld = incP2
+            .rotate(incidentBody.rot)
+            .transpose(incidentBody.pos.x, incidentBody.pos.y);
+        let penetratingPoint;
+        if (referenceBody.isInside(penetratingPointInWorld)) {
+            penetratingPoint = incP2;
+        } else {
+            penetratingPoint = incP1;
+        }
+        penetratingPoint = penetratingPoint
+            .rotate(incidentBody.rot)
+            .scale(engine.scale)
+            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
+        refP1 = refP1
+            .rotate(referenceBody.rot)
+            .scale(engine.scale)
+            .transpose(referenceBody.pos.x * engine.scale, referenceBody.pos.y * engine.scale);
+        refP2 = refP2
+            .rotate(referenceBody.rot)
+            .scale(engine.scale)
+            .transpose(referenceBody.pos.x * engine.scale, referenceBody.pos.y * engine.scale);
+        incP1 = incP1
+            .rotate(incidentBody.rot)
+            .scale(engine.scale)
+            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
+        incP2 = incP2
+            .rotate(incidentBody.rot)
+            .scale(engine.scale)
+            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
+        let edgePoint = penetratingPoint.add(mtvAxis.normal().scale(mtvLength).scale(engine.scale));
+
+        function drawPoint(point, size = 2) {
+            context.beginPath();
+            context.arc(point.x, point.y, size, 0, Math.PI * 2);
+            context.fill()
+        }
+
+        if (debug) {
+            context.fillStyle = '#000000';
+            drawPoint(penetratingPoint, 4);
+            context.fillStyle = '#fff933';
+            drawPoint(refP1);
+            context.fillStyle = '#ffd424';
+            drawPoint(refP2);
+            context.fillStyle = '#00ff23';
+            drawPoint(incP1);
+            context.fillStyle = '#00ff4f';
+            drawPoint(incP2);
+            context.fillStyle = '#66ffff';
+            drawPoint(edgePoint);
+        }
+
+
+        return {
+            'normal': mtvAxis,
+            'length': mtvLength,
+            'incident': incidentBody,
+            'refP1': refP1,
+            'refP2': refP2,
+            'edgePoint': edgePoint
+        };
     }
 }());

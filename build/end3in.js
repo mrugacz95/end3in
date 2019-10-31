@@ -101,17 +101,13 @@ module.exports = Vec2;
 
 
     Vec2.transpose = function (x, y) {
-        this.x += x;
-        this.y += y;
-        return this
+        return Vec2.create(this.x + x, this.y + y)
     };
 
     Vec2.rotate = function (theta) {
         let rotatedX = this.x * Math.cos(theta) - this.y * Math.sin(theta);
         let rotatedY = this.x * Math.sin(theta) + this.y * Math.cos(theta);
-        this.x = rotatedX;
-        this.y = rotatedY;
-        return this
+        return Vec2.create(rotatedX, rotatedY);
     };
 
     Vec2.copy = function () {
@@ -119,9 +115,7 @@ module.exports = Vec2;
     };
 
     Vec2.scale = function (s) {
-        this.x *= s;
-        this.y *= s;
-        return this
+        return Vec2.create(this.x * s, this.y * s);
     };
 
     Vec2.sqrtMagnitude = function () {
@@ -133,16 +127,12 @@ module.exports = Vec2;
     };
 
     Vec2.sub = function (other) {
-        this.x -= other.x;
-        this.y -= other.y;
-        return this;
+        return Vec2.create(this.x - other.x, this.y - other.y);
     };
 
     Vec2.normalize = function () {
         let len = this.sqrtMagnitude();
-        this.x /= len;
-        this.y /= len;
-        return this
+        return Vec2.create(this.x / len, this.y/ len)
     };
 
     Vec2.dot = function (other) {
@@ -154,10 +144,12 @@ module.exports = Vec2;
         return Vec2.create(-this.y, this.x);
     };
 
-    Vec2.add = function(other){
-        this.x += other.x;
-        this.y += other.y;
-        return this;
+    Vec2.add = function (other) {
+        return Vec2.create(this.x + other.x, this.y + other.y);
+    };
+
+    Vec2.div = function (divider) {
+        return Vec2.create(this.x / divider, this.y / divider);
     }
 }());
 
@@ -173,7 +165,6 @@ module.exports = Collision;
 
 (function () {
     Collision.areColliding = function (body1, body2) {
-        // AABB test
         var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
         var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
         var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
@@ -196,18 +187,30 @@ module.exports = Collision;
     };
 
     Collision.calculateSAT = function (body1, body2, options = {}) {
-        let context = options.context;
+        let context = !options.debug || options.context;
         let debug = options.debug || false;
 
-        function project(axis, body) {
+        function projectPoint(axis, point, body) {
+            return point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
+        }
+
+        function projectBody(axis, body) {
             let min = Number.MAX_VALUE;
+            let minPoint;
             let max = -Number.MAX_VALUE;
+            let maxPoint;
             for (let point of body.points) {
-                let projection = point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
-                min = Math.min(min, projection);
-                max = Math.max(max, projection);
+                let projection = projectPoint(axis, point, body);
+                if (min > projection) {
+                    min = projection;
+                    minPoint = point.copy();
+                }
+                if (max < projection) {
+                    max = projection;
+                    maxPoint = point.copy();
+                }
             }
-            return Vec2.create(min, max);
+            return {"min": min, "max": max, "minPoint": minPoint, "maxPoint": maxPoint};
         }
 
         function drawNormal(normal) {
@@ -227,43 +230,125 @@ module.exports = Collision;
             context.lineWidth = width;
             normal = normal.copy().normal();
             context.beginPath();
-            let axisStart = normal.copy().scale(proj.y * -engine.scale);
+            let axisStart = normal.copy().scale(proj.max * -engine.scale);
             context.moveTo(axisStart.x, axisStart.y);
-            let axisEnd = normal.copy().scale(proj.x * -engine.scale);
+            let axisEnd = normal.copy().scale(proj.min * -engine.scale);
             context.lineTo(axisEnd.x, axisEnd.y);
             context.stroke();
         }
 
         let mtvAxis = null;
         let mtvLength = Number.MAX_VALUE;
-        for (let body of [body1, body2]) {
-            for (let axis of body.axes()) {
+        let refP1;
+        let refP2;
+        let incP1;
+        let incP2;
+        let incidentBody;
+        let referenceBody;
+        for (let bodies of [[body1, body2], [body2, body1]]) {
+            let body = bodies[0];
+            let other = bodies[1];
+            for (let axisWithPoints of body.axes()) {
+                let axis = axisWithPoints.axis;
+
                 let normal = axis.rotate(body.rot).normalize();
-                let b1Proj = project(normal, body1);
-                let b2Proj = project(normal, body2);
+                let bProj = projectBody(normal, body);
+                let oProj = projectBody(normal, other);
                 if (debug) {
                     drawNormal(normal);
-                    drawProjection(normal, body1, b1Proj, "#FF0000", 10);
-                    drawProjection(normal, body2, b2Proj, "#00FF00", 8);
+                    drawProjection(normal, body, bProj, "#FF0000", 10);
+                    drawProjection(normal, other, oProj, "#00FF00", 8);
                 }
                 // check overlap
-                if (b1Proj.y <= b2Proj.x ||
-                    b1Proj.x >= b2Proj.y) {
+                if (bProj.max <= oProj.min ||
+                    bProj.min >= oProj.max) {
                     return false
                 }
                 let overlap = 0;
-                if (b1Proj.x < b2Proj.x) {
-                    overlap = b1Proj.y - b2Proj.x;
+
+                if (bProj.min < oProj.min) {
+                    overlap = bProj.max - oProj.min;
                 } else {
-                    overlap = b2Proj.y - b1Proj.x;
+                    overlap = oProj.max - bProj.min;
                 }
                 if (overlap < mtvLength) {
                     mtvLength = overlap;
                     mtvAxis = normal;
+                    referenceBody = body;
+                    refP1 = axisWithPoints.p1.copy();
+                    refP2 = axisWithPoints.p2.copy();
+                    incidentBody = other;
+                    incP1 = oProj.minPoint.copy();
+                    incP2 = oProj.maxPoint.copy();
+
                 }
             }
         }
-        return {'normal': mtvAxis, 'length': mtvLength};
+        let penetratingPointInWorld = incP2
+            .rotate(incidentBody.rot)
+            .transpose(incidentBody.pos.x, incidentBody.pos.y);
+        let penetratingPoint;
+        if (referenceBody.isInside(penetratingPointInWorld)) {
+            penetratingPoint = incP2;
+        } else {
+            penetratingPoint = incP1;
+        }
+        penetratingPoint = penetratingPoint
+            .rotate(incidentBody.rot)
+            .scale(engine.scale)
+            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
+        refP1 = refP1
+            .rotate(referenceBody.rot)
+            .scale(engine.scale)
+            .transpose(referenceBody.pos.x * engine.scale, referenceBody.pos.y * engine.scale);
+        refP2 = refP2
+            .rotate(referenceBody.rot)
+            .scale(engine.scale)
+            .transpose(referenceBody.pos.x * engine.scale, referenceBody.pos.y * engine.scale);
+        incP1 = incP1
+            .rotate(incidentBody.rot)
+            .scale(engine.scale)
+            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
+        incP2 = incP2
+            .rotate(incidentBody.rot)
+            .scale(engine.scale)
+            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
+        let edgePoint = penetratingPoint.add(mtvAxis.normal().scale(mtvLength).scale(engine.scale));
+        // let edge = refP2
+        //     .sub(refP1)
+        //     .rotate(referenceBody.rot)
+        //     .normalize();
+        // let edgePoint = edge.scale(edge.dot(penetratingPoint));
+
+        function drawPoint(point, size = 2) {
+            context.beginPath();
+            context.arc(point.x, point.y, size, 0, Math.PI * 2);
+            context.fill()
+        }
+
+        if (debug) {
+            context.fillStyle = '#000000';
+            drawPoint(penetratingPoint, 4);
+            context.fillStyle = '#fff933';
+            drawPoint(refP1);
+            context.fillStyle = '#ffd424';
+            drawPoint(refP2);
+            context.fillStyle = '#00ff23';
+            drawPoint(incP1);
+            context.fillStyle = '#00ff4f';
+            drawPoint(incP2);
+            context.fillStyle = '#66ffff';
+            drawPoint(edgePoint);
+        }
+
+
+        return {
+            'normal': mtvAxis,
+            'length': mtvLength,
+            'incident': incidentBody,
+            'refP1': refP1,
+            'refP2': refP2
+        };
     }
 }());
 
@@ -359,14 +444,13 @@ module.exports = Body;
         return Object.assign({}, this)
     };
 
-    Body.draw = function (ctx, scale) {
+    Body.draw = function (ctx, debug) {
         ctx.beginPath();
         for (let i = 0; i < this.points.length + 1; i++) {
             let next = this.points[i % this.points.length]
                 .copy()
                 .rotate(this.rot)
-                .scale(scale)
-                .transpose(this.pos.x * scale, this.pos.y * scale);
+                .transpose(this.pos.x, this.pos.y);
             if (i === 0) {
                 ctx.moveTo(next.x, next.y);
             } else {
@@ -374,7 +458,20 @@ module.exports = Body;
             }
         }
         ctx.fillStyle = this.color;
-        ctx.fill()
+        ctx.fill();
+        if(debug){
+            for(axis of this.axes()){
+                let mid = axis.p1.add(axis.p2).scale(0.5).rotate(this.rot).add(this.pos);
+                let norm = axis.axis.rotate(this.rot).normal();
+                ctx.lineWidth = 1 / engine.scale;
+                ctx.strokeStyle = "#7a7a7a";
+                ctx.beginPath();
+                ctx.moveTo(mid.x, mid.y);
+                ctx.lineTo(mid.x + norm.x, mid.y + norm.y);
+                ctx.stroke()
+            }
+
+        }
 
     };
 
@@ -400,15 +497,29 @@ module.exports = Body;
         this.omega += alpha * dt;
     };
 
+    Body.applyImpulse = function () {
+
+    };
+
     Body.axes = function () {
         let result = [];
         for (let i = 0; i < this.points.length; i++) {
             let first = this.points[i].copy();
             let second = this.points[(i + 1) % this.points.length].copy();
-            let normal = first.sub(second);
-            result.push(normal)
+            result.push({"axis": first.copy().sub(second), "p1": first, "p2": second})
         }
         return result;
+    };
+
+    Body.isInside = function (point) {
+        for (a of this.axes()) {
+            let p1 = a.p1.rotate(this.rot).transpose(this.pos.x, this.pos.y);
+            let p2 = a.p2.rotate(this.rot).transpose(this.pos.x, this.pos.y);
+            let s = p1.sub(p2);
+            let d = s.dot(point.sub(p2));
+            if (d > 0) return false;
+        }
+        return true;
     }
 }());
 
@@ -424,7 +535,7 @@ module.exports = Engine;
 
 (function () {
 
-    Engine.create = function () {
+    Engine.create = function (debug = false) {
         this.canvas = document.getElementById('canvas');
         this.ctx = canvas.getContext('2d');
         this.scale = 60;
@@ -432,7 +543,7 @@ module.exports = Engine;
         this.dt = 1 / 60;
         this.width = 10 * this.scale;
         this.height = 10 * this.scale;
-
+        this.debug = debug;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
 
@@ -461,7 +572,7 @@ module.exports = Engine;
                 obj.applyAcceleration(0, -9.81, 0, engine.dt);
             }
         }
-        this.impulseSolver();
+        // this.impulseSolver();
         for (let obj of this.gameObjects) {
             obj.update(this.dt);
         }
@@ -470,9 +581,10 @@ module.exports = Engine;
 
     Engine.draw = function () {
         this.ctx.save();
-        this.ctx.translate(this.cameraPos.x * this.scale, this.cameraPos.y * this.scale);
+        this.ctx.scale(this.scale, this.scale);
+        this.ctx.translate(this.cameraPos.x, this.cameraPos.y);
         for (let obj of this.gameObjects) {
-            obj.draw(this.ctx, this.scale);
+            obj.draw(this.ctx, this.debug);
         }
         this.ctx.restore()
     };

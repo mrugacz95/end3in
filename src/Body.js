@@ -74,14 +74,13 @@ module.exports = Body;
         return Object.assign({}, this)
     };
 
-    Body.draw = function (ctx, scale) {
+    Body.draw = function (ctx, debug) {
         ctx.beginPath();
         for (let i = 0; i < this.points.length + 1; i++) {
             let next = this.points[i % this.points.length]
                 .copy()
                 .rotate(this.rot)
-                .scale(scale)
-                .transpose(this.pos.x * scale, this.pos.y * scale);
+                .transpose(this.pos.x, this.pos.y);
             if (i === 0) {
                 ctx.moveTo(next.x, next.y);
             } else {
@@ -89,7 +88,20 @@ module.exports = Body;
             }
         }
         ctx.fillStyle = this.color;
-        ctx.fill()
+        ctx.fill();
+        if(debug){
+            for(axis of this.axes()){
+                let mid = axis.p1.add(axis.p2).scale(0.5).rotate(this.rot).add(this.pos);
+                let norm = axis.axis.rotate(this.rot).normal();
+                ctx.lineWidth = 1 / engine.scale;
+                ctx.strokeStyle = "#7a7a7a";
+                ctx.beginPath();
+                ctx.moveTo(mid.x, mid.y);
+                ctx.lineTo(mid.x + norm.x, mid.y + norm.y);
+                ctx.stroke()
+            }
+
+        }
 
     };
 
@@ -115,14 +127,28 @@ module.exports = Body;
         this.omega += alpha * dt;
     };
 
+    Body.applyImpulse = function () {
+
+    };
+
     Body.axes = function () {
         let result = [];
         for (let i = 0; i < this.points.length; i++) {
             let first = this.points[i].copy();
             let second = this.points[(i + 1) % this.points.length].copy();
-            let normal = first.sub(second);
-            result.push(normal)
+            result.push({"axis": first.copy().sub(second), "p1": first, "p2": second})
         }
         return result;
+    };
+
+    Body.isInside = function (point) {
+        for (a of this.axes()) {
+            let p1 = a.p1.rotate(this.rot).transpose(this.pos.x, this.pos.y);
+            let p2 = a.p2.rotate(this.rot).transpose(this.pos.x, this.pos.y);
+            let s = p1.sub(p2);
+            let d = s.dot(point.sub(p2));
+            if (d > 0) return false;
+        }
+        return true;
     }
 }());

@@ -11,17 +11,13 @@ module.exports = Vec2;
 
 
     Vec2.transpose = function (x, y) {
-        this.x += x;
-        this.y += y;
-        return this
+        return Vec2.create(this.x + x, this.y + y)
     };
 
     Vec2.rotate = function (theta) {
         let rotatedX = this.x * Math.cos(theta) - this.y * Math.sin(theta);
         let rotatedY = this.x * Math.sin(theta) + this.y * Math.cos(theta);
-        this.x = rotatedX;
-        this.y = rotatedY;
-        return this
+        return Vec2.create(rotatedX, rotatedY);
     };
 
     Vec2.copy = function () {
@@ -29,9 +25,7 @@ module.exports = Vec2;
     };
 
     Vec2.scale = function (s) {
-        this.x *= s;
-        this.y *= s;
-        return this
+        return Vec2.create(this.x * s, this.y * s);
     };
 
     Vec2.sqrtMagnitude = function () {
@@ -43,16 +37,12 @@ module.exports = Vec2;
     };
 
     Vec2.sub = function (other) {
-        this.x -= other.x;
-        this.y -= other.y;
-        return this;
+        return Vec2.create(this.x - other.x, this.y - other.y);
     };
 
     Vec2.normalize = function () {
         let len = this.sqrtMagnitude();
-        this.x /= len;
-        this.y /= len;
-        return this
+        return Vec2.create(this.x / len, this.y/ len)
     };
 
     Vec2.dot = function (other) {
@@ -64,9 +54,11 @@ module.exports = Vec2;
         return Vec2.create(-this.y, this.x);
     };
 
-    Vec2.add = function(other){
-        this.x += other.x;
-        this.y += other.y;
-        return this;
+    Vec2.add = function (other) {
+        return Vec2.create(this.x + other.x, this.y + other.y);
+    };
+
+    Vec2.div = function (divider) {
+        return Vec2.create(this.x / divider, this.y / divider);
     }
 }());

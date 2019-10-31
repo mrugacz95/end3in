@@ -12,15 +12,19 @@
     var Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision;
-    let engine = Engine.create();
-    var rect1 = Body.rect(0.5, 0.5, 1, 2, {'isStatic': true, 'color': "#141ae6EE", "rot": Math.PI / 3}); // Math.PI / 4
-    var polygon1 = Body.polygon([[1, -1], [0, -0.5], [-0.25, 0], [1, 1]],
+    let engine = Engine.create(debug = true);
+    var rect1 = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
+        'isStatic': true,
+        'color': "#141ae6EE",
+        "rot": 0
+    }); // Math.PI / 4
+    var polygon1 = Body.polygon([[-0.25, 0], [0, -0.5], [0.69, -0.76], [1.2, 0.8]],
         0.8, 4.2, {
             'isStatic': true,
             'color': "#141ae6EE",
             "rot": Math.PI / 6
         });
-    var polygon2 = Body.polygon([[0.5, -0.35], [0.75, 0.5], [0.44, 0.37], [-0.4, -0.20]],
+    var polygon2 = Body.polygon([[0.62, -0.40], [0.65, 0.25], [0.44, 0.37], [-0.4, -0.20]],
         3.3, 2.0, {
             'isStatic': true,
             'color': "#141ae6EE",
@@ -36,6 +40,17 @@
     engine.draw = function () {
     };
     engine.start();
+
+    document.addEventListener("keydown", event => {
+        if (event.isComposing || event.keyCode === 37) {
+            rect1.rot += 2 * Math.PI / 180.0;
+        }
+        if (event.isComposing || event.keyCode === 39) {
+            rect1.rot -= 2 * Math.PI / 180.0;
+        }
+        clear.call(engine);
+        draw.call(engine);
+    });
     document.onmousemove = function (event) {
         clear.call(engine);
         draw.call(engine);
@@ -44,10 +59,10 @@
 
         engine.ctx.save();
         engine.ctx.translate(engine.cameraPos.x * engine.scale, engine.cameraPos.y * engine.scale);
-        if (Collision.calculateSAT(rect1, polygon1, {'context': engine.ctx, 'debug': true})) {
+        if (Collision.calculateSAT(polygon1, rect1, {'context': engine.ctx, 'debug': true})) {
             rect1.color = "#e62131EE";
         }
-        if (Collision.calculateSAT(rect1, polygon2, {'context': engine.ctx, 'debug': true})) {
+        if (Collision.calculateSAT(polygon2, rect1, {'context': engine.ctx, 'debug': true})) {
             rect1.color = "#e62131EE";
         }
         engine.ctx.restore();
