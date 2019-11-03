@@ -12,8 +12,8 @@
     var Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision;
-    let engine = Engine.create(debug = true);
-    var rect1 = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
+    let engine = Engine.create(debug = true, solver = "none");
+    var triangle = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
         'isStatic': true,
         'color': "#141ae6EE",
         "rot": 0
@@ -30,9 +30,15 @@
             'color': "#141ae6EE",
             "rot": Math.PI / 6
         });
-    engine.addBody(rect1);
+    var rect1 = Body.rect(1, 1, 2, -1, {
+        'isStatic': true,
+        'color': "#141ae6EE",
+        "rot": Math.PI / 4
+    });
+    engine.addBody(triangle);
     engine.addBody(polygon1);
     engine.addBody(polygon2);
+    engine.addBody(rect1);
     var clear = engine.clear;
     var draw = engine.draw;
     engine.clear = function () {
@@ -43,10 +49,10 @@
 
     document.addEventListener("keydown", event => {
         if (event.isComposing || event.keyCode === 37) {
-            rect1.rot += 2 * Math.PI / 180.0;
+            triangle.rot += 2 * Math.PI / 180.0;
         }
         if (event.isComposing || event.keyCode === 39) {
-            rect1.rot -= 2 * Math.PI / 180.0;
+            triangle.rot -= 2 * Math.PI / 180.0;
         }
         clear.call(engine);
         draw.call(engine);
@@ -54,16 +60,18 @@
     document.onmousemove = function (event) {
         clear.call(engine);
         draw.call(engine);
-        rect1.pos = Vec2.create(event.clientX / engine.scale, event.clientY / engine.scale).sub(engine.cameraPos);
-        rect1.color = "#141ae6EE";
+        triangle.pos = Vec2.create(event.clientX / engine.scale, event.clientY / engine.scale).sub(engine.cameraPos);
+        triangle.color = "#141ae6EE";
 
         engine.ctx.save();
         engine.ctx.translate(engine.cameraPos.x * engine.scale, engine.cameraPos.y * engine.scale);
-        if (Collision.calculateSAT(polygon1, rect1, {'context': engine.ctx, 'debug': true})) {
-            rect1.color = "#e62131EE";
-        }
-        if (Collision.calculateSAT(polygon2, rect1, {'context': engine.ctx, 'debug': true})) {
-            rect1.color = "#e62131EE";
+        for (let gameObj of engine.gameObjects) {
+            if (gameObj === triangle) {
+                continue;
+            }
+            if (Collision.calculateSAT(gameObj, triangle, {'context': engine.ctx, 'debug': true})) {
+                triangle.color = "#e62131EE";
+            }
         }
         engine.ctx.restore();
     }

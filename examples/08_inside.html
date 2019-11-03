@@ -39,16 +39,6 @@
         draw.call(engine);
         let mouse = Vec2.create(event.clientX / engine.scale, event.clientY / engine.scale).sub(engine.cameraPos);
         rect1.pos = mouse;
-        // if (rect1.isInside(mouse)) {
-        //     rect1.color = "#e62131EE";
-        // } else {
-        //     rect1.color = "#2736E6";
-        // }
-        // if (polygon1.isInside(mouse)) {
-        //     polygon1.color = "#e62131EE";
-        // } else {
-        //     polygon1.color = "#2736E6";
-        // }
         if (polygon2.isInside(mouse)) {
             polygon2.color = "#e62131EE";
         } else {

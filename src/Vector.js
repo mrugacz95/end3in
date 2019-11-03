@@ -42,10 +42,14 @@ module.exports = Vec2;
 
     Vec2.normalize = function () {
         let len = this.sqrtMagnitude();
-        return Vec2.create(this.x / len, this.y/ len)
+        return Vec2.create(this.x / len, this.y / len)
     };
 
     Vec2.dot = function (other) {
+        return this.x * other.x - this.y * other.y;
+    };
+
+    Vec2.cross = function (other) {
         return this.x * other.y - this.y * other.x;
     };
 

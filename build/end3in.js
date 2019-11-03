@@ -132,10 +132,14 @@ module.exports = Vec2;
 
     Vec2.normalize = function () {
         let len = this.sqrtMagnitude();
-        return Vec2.create(this.x / len, this.y/ len)
+        return Vec2.create(this.x / len, this.y / len)
     };
 
     Vec2.dot = function (other) {
+        return this.x * other.x - this.y * other.y;
+    };
+
+    Vec2.cross = function (other) {
         return this.x * other.y - this.y * other.x;
     };
 
@@ -191,7 +195,7 @@ module.exports = Collision;
         let debug = options.debug || false;
 
         function projectPoint(axis, point, body) {
-            return point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
+            return point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).cross(axis);
         }
 
         function projectBody(axis, body) {
@@ -293,61 +297,23 @@ module.exports = Collision;
         } else {
             penetratingPoint = incP1;
         }
+        let edgePoint = penetratingPoint
+            .rotate(incidentBody.rot)
+            .transpose(incidentBody.pos.x, incidentBody.pos.y)
+            .add(mtvAxis.normal().scale(mtvLength))
+            .transpose(-referenceBody.pos.x, -referenceBody.pos.y);
         penetratingPoint = penetratingPoint
-            .rotate(incidentBody.rot)
-            .scale(engine.scale)
-            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
-        refP1 = refP1
-            .rotate(referenceBody.rot)
-            .scale(engine.scale)
-            .transpose(referenceBody.pos.x * engine.scale, referenceBody.pos.y * engine.scale);
-        refP2 = refP2
-            .rotate(referenceBody.rot)
-            .scale(engine.scale)
-            .transpose(referenceBody.pos.x * engine.scale, referenceBody.pos.y * engine.scale);
-        incP1 = incP1
-            .rotate(incidentBody.rot)
-            .scale(engine.scale)
-            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
-        incP2 = incP2
-            .rotate(incidentBody.rot)
-            .scale(engine.scale)
-            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
-        let edgePoint = penetratingPoint.add(mtvAxis.normal().scale(mtvLength).scale(engine.scale));
-        // let edge = refP2
-        //     .sub(refP1)
-        //     .rotate(referenceBody.rot)
-        //     .normalize();
-        // let edgePoint = edge.scale(edge.dot(penetratingPoint));
-
-        function drawPoint(point, size = 2) {
-            context.beginPath();
-            context.arc(point.x, point.y, size, 0, Math.PI * 2);
-            context.fill()
-        }
-
-        if (debug) {
-            context.fillStyle = '#000000';
-            drawPoint(penetratingPoint, 4);
-            context.fillStyle = '#fff933';
-            drawPoint(refP1);
-            context.fillStyle = '#ffd424';
-            drawPoint(refP2);
-            context.fillStyle = '#00ff23';
-            drawPoint(incP1);
-            context.fillStyle = '#00ff4f';
-            drawPoint(incP2);
-            context.fillStyle = '#66ffff';
-            drawPoint(edgePoint);
-        }
-
+            .rotate(incidentBody.rot);
 
         return {
             'normal': mtvAxis,
             'length': mtvLength,
-            'incident': incidentBody,
+            'penetratingBody': incidentBody,
             'refP1': refP1,
-            'refP2': refP2
+            'refP2': refP2,
+            'referenceBody': referenceBody,
+            'referencePoint': edgePoint,
+            'penetratingPoint': penetratingPoint
         };
     }
 }());
@@ -376,10 +342,6 @@ module.exports = Body;
 
 (function () {
 
-    Body.setDefaults = function () {
-
-    };
-
     Body.rect = function (width, height, x, y, options = {}) {
         this.pos = Vec2.create(x, y);
         this.rot = options.rot || 0.0;
@@ -389,17 +351,17 @@ module.exports = Body;
             Vec2.create(-width / 2, height / 2)];
         this.width = width;
         this.height = height;
-        this.vx = 0;
-        this.vy = 0;
+        this.v = Vec2.create(0, 0);
         this.omega = 0.0;
+        this.arbiters = [];
         if (options.isStatic) {
             this.m = 0;
             this.mInv = 0;
             this.IInv = 0;
         } else {
-            this.m = 0.9 * this.width * this.height;
+            this.m = 900 * this.width * this.height;
             this.mInv = 1.0 / this.m;
-            this.IInv = this.m * (this.width * this.width + this.height + this.height) / 12;
+            this.IInv = 12.0 / (this.m * (this.width * this.width + this.height + this.height));
         }
         if (options.color) {
             this.color = options.color
@@ -418,8 +380,7 @@ module.exports = Body;
         for (let pair of vertices) {
             this.points.push(Vec2.create(pair[0] - meanX, pair[1] - meanY));
         }
-        this.vx = 0;
-        this.vy = 0;
+        this.v = Vec2.create(0, 0);
         this.omega = 0.0;
         if (options.isStatic) {
             this.m = 0;
@@ -429,12 +390,14 @@ module.exports = Body;
             this.m = 0;
             var last = this.points[this.points.length - 1];
             for (let point of this.points) {
-                this.m += (last.x + point.y) * (last.y - point.x);
+                this.m += (last.x * point.y) - (last.y * point.x);
                 last = point
             }
-            this.m = Math.abs(this.m / 2.0);
+            this.m = 900 * Math.abs(this.m / 2.0);
+            // aprox with circle
             this.mInv = 1.0 / this.m;
-            this.IInv = 2 / (this.m * Math.max.apply(this.points.map((v) => (v.length))));
+            this.IInv = (Math.max.apply(Math, this.points.map((v) => (v.sqrtMagnitude()))));
+            this.IInv = 2 / (this.m * this.IInv * this.IInv);
         }
         if (options.color) {
             this.color = options.color
@@ -448,7 +411,6 @@ module.exports = Body;
         ctx.beginPath();
         for (let i = 0; i < this.points.length + 1; i++) {
             let next = this.points[i % this.points.length]
-                .copy()
                 .rotate(this.rot)
                 .transpose(this.pos.x, this.pos.y);
             if (i === 0) {
@@ -459,8 +421,8 @@ module.exports = Body;
         }
         ctx.fillStyle = this.color;
         ctx.fill();
-        if(debug){
-            for(axis of this.axes()){
+        if (debug) {
+            for (axis of this.axes()) {
                 let mid = axis.p1.add(axis.p2).scale(0.5).rotate(this.rot).add(this.pos);
                 let norm = axis.axis.rotate(this.rot).normal();
                 ctx.lineWidth = 1 / engine.scale;
@@ -476,8 +438,8 @@ module.exports = Body;
     };
 
     Body.update = function (dt) {
-        this.pos.x += this.vx * dt;
-        this.pos.y += this.vy * dt;
+        this.pos.x += this.v.x * dt;
+        this.pos.y += this.v.y * dt;
         this.rot += this.omega * dt;
     };
 
@@ -492,13 +454,15 @@ module.exports = Body;
 
     Body.applyAcceleration = function (ax, ay, tau, dt) {
         let alpha = tau * this.IInv;
-        this.vx += ax * dt;
-        this.vy -= ay * dt;
+        this.v.x += ax * dt;
+        this.v.y -= ay * dt;
         this.omega += alpha * dt;
     };
 
-    Body.applyImpulse = function () {
-
+    Body.applyImpulse = function (P, r) {
+        this.v.x -= P.x * this.mInv;
+        this.v.y -= P.y * this.mInv;
+        this.omega -= this.IInv * r.cross(P);
     };
 
     Body.axes = function () {
@@ -516,11 +480,11 @@ module.exports = Body;
             let p1 = a.p1.rotate(this.rot).transpose(this.pos.x, this.pos.y);
             let p2 = a.p2.rotate(this.rot).transpose(this.pos.x, this.pos.y);
             let s = p1.sub(p2);
-            let d = s.dot(point.sub(p2));
+            let d = s.cross(point.sub(p2));
             if (d > 0) return false;
         }
         return true;
-    }
+    };
 }());
 
 /***/ }),
@@ -535,8 +499,9 @@ module.exports = Engine;
 
 (function () {
 
-    Engine.create = function (debug = false) {
+    Engine.create = function (debug = false, solver = 'impulse') {
         this.canvas = document.getElementById('canvas');
+        this.solver = solver;
         this.ctx = canvas.getContext('2d');
         this.scale = 60;
         this.cameraPos = Vec2.create(3, 3);
@@ -546,7 +511,7 @@ module.exports = Engine;
         this.debug = debug;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
-
+        this.g = -9.81;
         this.gameObjects = [];
         this.newBodyId = 0;
         return Object.assign({}, this)
@@ -568,11 +533,23 @@ module.exports = Engine;
     Engine.update = function () {
         this.clear();
         for (let obj of this.gameObjects) {
-            if(obj.mInv !== 0) {
-                obj.applyAcceleration(0, -9.81, 0, engine.dt);
+            if (obj.mInv !== 0) {
+                obj.applyAcceleration(0, this.g, 0, engine.dt);
             }
         }
-        // this.impulseSolver();
+        if (this.solver === 'impulse') {
+            for (let obj of this.gameObjects) {
+                for (let i = obj.arbiters.length - 1; i >= 0; i--) {
+                    obj.arbiters[i].vec = obj.arbiters[i].vec.scale(0.05);
+                    if (obj.arbiters[i].vec.length < 0.01) {
+                        obj.arbiters.splice(i, 1);
+                        continue
+                    }
+                    obj.applyImpulse(obj.arbiters[i].vec, obj.arbiters[i].point)
+                }
+            }
+            this.impulseSolver();
+        }
         for (let obj of this.gameObjects) {
             obj.update(this.dt);
         }
@@ -601,13 +578,49 @@ module.exports = Engine;
                 if (body2.bodyId >= body1.bodyId) {
                     continue;
                 }
+                if (!Collision.areColliding(body1, body2)) {
+                    continue;
+                }
                 let mtv = Collision.calculateSAT(body1, body2);
                 if (mtv) {
-                    let normal = mtv.normal.copy().normal().scale(mtv.length * 100);
-                    let b1normal = normal.copy().scale(body1.m);
-                    body1.applyForce(b1normal.x, b1normal.y, body1.pos.x, body1.pos.y, this.dt);
-                    let b2normal = normal.copy().scale(body2.m);
-                    body2.applyForce(b2normal.x, b2normal.y, body2.pos.x, body2.pos.y, this.dt);
+                    let incident = mtv.penetratingBody;
+                    let reference = mtv.referenceBody;
+                    // V + omega × r
+                    let penetratingVelocity = mtv.penetratingBody.v
+                        .add(mtv.penetratingPoint
+                            .normal()
+                            .scale(mtv.penetratingBody.omega))
+                        .cross(mtv.normal);
+                    let referenceVelocity = mtv.referenceBody.v
+                        .add(mtv.referencePoint
+                            .normal()
+                            .scale(mtv.referenceBody.omega))
+                        .cross(mtv.normal);
+
+                    let relativeVelocity = Math.abs(penetratingVelocity - referenceVelocity);
+
+                    let rn1 = mtv.penetratingPoint.cross(mtv.normal);
+                    let rn2 = mtv.referencePoint.cross(mtv.normal);
+
+                    var k = mtv.penetratingBody.mInv + mtv.referenceBody.mInv;
+                    k += mtv.penetratingBody.IInv * (rn1 * rn1);
+                    k += mtv.referenceBody.IInv * (rn2 * rn2);
+
+
+                    let slop = 0.01;
+                    let bias = 0.2 / this.dt * Math.max(mtv.length - slop, 0);
+                    let P = (relativeVelocity + bias) / k;
+
+                    P = mtv.normal.scale(P).normal();
+
+                    let refVector = P.scale(0.5);
+                    let indVector = P.scale(-0.5);
+                    incident.arbiters.push({'vec': indVector, 'point': mtv.penetratingPoint});
+                    reference.arbiters.push({'vec': refVector, 'point': mtv.referencePoint});
+                    incident.applyImpulse(indVector,
+                        mtv.penetratingPoint);
+                    reference.applyImpulse(refVector,
+                        mtv.referencePoint);
                 }
             }
         }

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shapes</title>
+    <script src="../build/end3in.js"></script>
+</head>
+<body style="margin: 0;">
+
+<canvas height="1000px" id="canvas" width="1000px"></canvas>
+<script>
+    var Engine = end3in.Engine,
+        Body = end3in.Body,
+        Collision = end3in.Collision;
+    let engine = Engine.create();
+    var rect1 = Body.rect(0.5, 0.5, 1, 2, {
+        'color': "rgba(217,230,31,0.93)",
+        "rot": Math.PI / 6
+    });
+    var rect2 = Body.rect(0.5, 0.5,
+        0, 0.0, {
+            'color': "rgba(26,230,73,0.93)",
+            "rot": Math.PI / 6
+        });
+    let poly = Body.polygon([[0.25, 0.25],
+        [-0.25,0.25],
+        [-0.25, -0.25],
+        [0.25, -0.25]],
+        -1, 2, {
+            'color': "rgba(230,182,46,0.93)",
+            "rot": Math.PI / 7
+        });
+    var ground = Body.rect(10, 2,
+        0, 5.0, {
+            'color': "rgba(0,0,0,0.93)",
+            "isStatic": true
+        });
+    engine.addBody(ground);
+    engine.addBody(rect1);
+    engine.addBody(rect2);
+    engine.addBody(poly);
+    // engine.g = 0;
+    engine.start();
+
+
+    function setup() {
+        rect1.pos = Vec2.create(0, 2.55);
+        rect2.pos = Vec2.create(2, 2);
+        // rect2.rot = Math.PI / 4;
+        poly.rot = Math.PI / 7;
+        rect2.v = Vec2.create(0, 0);
+        rect1.v = Vec2.create(0, 0);
+        // rect2.m = 1;
+        // rect2.mInv = 1;
+        // rect1.omega = Math.PI ;
+        // rect2.omega = Math.PI / 6;
+    }
+
+    setup();
+
+    document.onmousedown = function (event) {
+        setup()
+    }
+
+</script>
+
+</body>
+</html>

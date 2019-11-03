@@ -32,7 +32,7 @@ module.exports = Collision;
         let debug = options.debug || false;
 
         function projectPoint(axis, point, body) {
-            return point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
+            return point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).cross(axis);
         }
 
         function projectBody(axis, body) {
@@ -134,57 +134,23 @@ module.exports = Collision;
         } else {
             penetratingPoint = incP1;
         }
+        let edgePoint = penetratingPoint
+            .rotate(incidentBody.rot)
+            .transpose(incidentBody.pos.x, incidentBody.pos.y)
+            .add(mtvAxis.normal().scale(mtvLength))
+            .transpose(-referenceBody.pos.x, -referenceBody.pos.y);
         penetratingPoint = penetratingPoint
-            .rotate(incidentBody.rot)
-            .scale(engine.scale)
-            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
-        refP1 = refP1
-            .rotate(referenceBody.rot)
-            .scale(engine.scale)
-            .transpose(referenceBody.pos.x * engine.scale, referenceBody.pos.y * engine.scale);
-        refP2 = refP2
-            .rotate(referenceBody.rot)
-            .scale(engine.scale)
-            .transpose(referenceBody.pos.x * engine.scale, referenceBody.pos.y * engine.scale);
-        incP1 = incP1
-            .rotate(incidentBody.rot)
-            .scale(engine.scale)
-            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
-        incP2 = incP2
-            .rotate(incidentBody.rot)
-            .scale(engine.scale)
-            .transpose(incidentBody.pos.x * engine.scale, incidentBody.pos.y * engine.scale);
-        let edgePoint = penetratingPoint.add(mtvAxis.normal().scale(mtvLength).scale(engine.scale));
-
-        function drawPoint(point, size = 2) {
-            context.beginPath();
-            context.arc(point.x, point.y, size, 0, Math.PI * 2);
-            context.fill()
-        }
-
-        if (debug) {
-            context.fillStyle = '#000000';
-            drawPoint(penetratingPoint, 4);
-            context.fillStyle = '#fff933';
-            drawPoint(refP1);
-            context.fillStyle = '#ffd424';
-            drawPoint(refP2);
-            context.fillStyle = '#00ff23';
-            drawPoint(incP1);
-            context.fillStyle = '#00ff4f';
-            drawPoint(incP2);
-            context.fillStyle = '#66ffff';
-            drawPoint(edgePoint);
-        }
-
+            .rotate(incidentBody.rot);
 
         return {
             'normal': mtvAxis,
             'length': mtvLength,
-            'incident': incidentBody,
+            'penetratingBody': incidentBody,
             'refP1': refP1,
             'refP2': refP2,
-            'edgePoint': edgePoint
+            'referenceBody': referenceBody,
+            'referencePoint': edgePoint,
+            'penetratingPoint': penetratingPoint
         };
     }
 }());

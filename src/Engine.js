@@ -6,8 +6,9 @@ module.exports = Engine;
 
 (function () {
 
-    Engine.create = function (debug = false) {
+    Engine.create = function (debug = false, solver = 'impulse') {
         this.canvas = document.getElementById('canvas');
+        this.solver = solver;
         this.ctx = canvas.getContext('2d');
         this.scale = 60;
         this.cameraPos = Vec2.create(3, 3);
@@ -17,7 +18,7 @@ module.exports = Engine;
         this.debug = debug;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
-
+        this.g = -9.81;
         this.gameObjects = [];
         this.newBodyId = 0;
         return Object.assign({}, this)
@@ -39,11 +40,23 @@ module.exports = Engine;
     Engine.update = function () {
         this.clear();
         for (let obj of this.gameObjects) {
-            if(obj.mInv !== 0) {
-                obj.applyAcceleration(0, -9.81, 0, engine.dt);
+            if (obj.mInv !== 0) {
+                obj.applyAcceleration(0, this.g, 0, engine.dt);
             }
         }
-        // this.impulseSolver();
+        if (this.solver === 'impulse') {
+            for (let obj of this.gameObjects) {
+                for (let i = obj.arbiters.length - 1; i >= 0; i--) {
+                    obj.arbiters[i].vec = obj.arbiters[i].vec.scale(0.05);
+                    if (obj.arbiters[i].vec.length < 0.01) {
+                        obj.arbiters.splice(i, 1);
+                        continue
+                    }
+                    obj.applyImpulse(obj.arbiters[i].vec, obj.arbiters[i].point)
+                }
+            }
+            this.impulseSolver();
+        }
         for (let obj of this.gameObjects) {
             obj.update(this.dt);
         }
@@ -72,13 +85,49 @@ module.exports = Engine;
                 if (body2.bodyId >= body1.bodyId) {
                     continue;
                 }
+                if (!Collision.areColliding(body1, body2)) {
+                    continue;
+                }
                 let mtv = Collision.calculateSAT(body1, body2);
                 if (mtv) {
-                    let normal = mtv.normal.copy().normal().scale(mtv.length * 100);
-                    let b1normal = normal.copy().scale(body1.m);
-                    body1.applyForce(b1normal.x, b1normal.y, body1.pos.x, body1.pos.y, this.dt);
-                    let b2normal = normal.copy().scale(body2.m);
-                    body2.applyForce(b2normal.x, b2normal.y, body2.pos.x, body2.pos.y, this.dt);
+                    let incident = mtv.penetratingBody;
+                    let reference = mtv.referenceBody;
+                    // V + omega × r
+                    let penetratingVelocity = mtv.penetratingBody.v
+                        .add(mtv.penetratingPoint
+                            .normal()
+                            .scale(mtv.penetratingBody.omega))
+                        .cross(mtv.normal);
+                    let referenceVelocity = mtv.referenceBody.v
+                        .add(mtv.referencePoint
+                            .normal()
+                            .scale(mtv.referenceBody.omega))
+                        .cross(mtv.normal);
+
+                    let relativeVelocity = Math.abs(penetratingVelocity - referenceVelocity);
+
+                    let rn1 = mtv.penetratingPoint.cross(mtv.normal);
+                    let rn2 = mtv.referencePoint.cross(mtv.normal);
+
+                    var k = mtv.penetratingBody.mInv + mtv.referenceBody.mInv;
+                    k += mtv.penetratingBody.IInv * (rn1 * rn1);
+                    k += mtv.referenceBody.IInv * (rn2 * rn2);
+
+
+                    let slop = 0.01;
+                    let bias = 0.2 / this.dt * Math.max(mtv.length - slop, 0);
+                    let P = (relativeVelocity + bias) / k;
+
+                    P = mtv.normal.scale(P).normal();
+
+                    let refVector = P.scale(0.5);
+                    let indVector = P.scale(-0.5);
+                    incident.arbiters.push({'vec': indVector, 'point': mtv.penetratingPoint});
+                    reference.arbiters.push({'vec': refVector, 'point': mtv.referencePoint});
+                    incident.applyImpulse(indVector,
+                        mtv.penetratingPoint);
+                    reference.applyImpulse(refVector,
+                        mtv.referencePoint);
                 }
             }
         }
