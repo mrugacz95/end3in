@@ -538,16 +538,6 @@ module.exports = Engine;
             }
         }
         if (this.solver === 'impulse') {
-            for (let obj of this.gameObjects) {
-                for (let i = obj.arbiters.length - 1; i >= 0; i--) {
-                    obj.arbiters[i].vec = obj.arbiters[i].vec.scale(0.05);
-                    if (obj.arbiters[i].vec.length < 0.01) {
-                        obj.arbiters.splice(i, 1);
-                        continue
-                    }
-                    obj.applyImpulse(obj.arbiters[i].vec, obj.arbiters[i].point)
-                }
-            }
             this.impulseSolver();
         }
         for (let obj of this.gameObjects) {
@@ -597,7 +587,9 @@ module.exports = Engine;
                             .scale(mtv.referenceBody.omega))
                         .cross(mtv.normal);
 
-                    let relativeVelocity = Math.abs(penetratingVelocity - referenceVelocity);
+                    let relativeVelocity = penetratingVelocity - referenceVelocity;
+                    let sign = Math.sign(relativeVelocity);
+                    relativeVelocity = Math.abs(relativeVelocity);
 
                     let rn1 = mtv.penetratingPoint.cross(mtv.normal);
                     let rn2 = mtv.referencePoint.cross(mtv.normal);
@@ -607,14 +599,14 @@ module.exports = Engine;
                     k += mtv.referenceBody.IInv * (rn2 * rn2);
 
 
-                    let slop = 0.01;
+                    let slop = 0.02;
                     let bias = 0.2 / this.dt * Math.max(mtv.length - slop, 0);
-                    let P = (relativeVelocity + bias) / k;
+                    let P = (relativeVelocity + sign * bias) / k;
 
                     P = mtv.normal.scale(P).normal();
 
-                    let refVector = P.scale(0.5);
-                    let indVector = P.scale(-0.5);
+                    let refVector = P.scale(sign);
+                    let indVector = P.scale(-1 * sign);
                     incident.arbiters.push({'vec': indVector, 'point': mtv.penetratingPoint});
                     reference.arbiters.push({'vec': refVector, 'point': mtv.referencePoint});
                     incident.applyImpulse(indVector,

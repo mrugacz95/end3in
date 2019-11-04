@@ -13,12 +13,13 @@
         Body = end3in.Body,
         Collision = end3in.Collision;
     let engine = Engine.create();
-    var rect1 = Body.rect(0.5, 0.5, 1, 2, {
-        'color': "rgba(217,230,31,0.93)",
+    var rect1 = Body.rect(0.5, 0.5,
+        1, 6, {
+        'color': "rgba(230,23,74,0.93)",
         "rot": Math.PI / 6
     });
     var rect2 = Body.rect(0.5, 0.5,
-        0, 0.0, {
+        0, 6, {
             'color': "rgba(26,230,73,0.93)",
             "rot": Math.PI / 6
         });
@@ -44,10 +45,10 @@
 
 
     function setup() {
-        rect1.pos = Vec2.create(0, 2.55);
-        rect2.pos = Vec2.create(2, 2);
-        // rect2.rot = Math.PI / 4;
-        poly.rot = Math.PI / 7;
+        rect1.pos = Vec2.create(0, 3);
+        rect2.pos = Vec2.create(0, 3.5);
+        rect2.rot = 0;
+        rect1.rot = 0;
         rect2.v = Vec2.create(0, 0);
         rect1.v = Vec2.create(0, 0);
         // rect2.m = 1;
