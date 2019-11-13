@@ -69,6 +69,12 @@ module.exports = Engine;
         this.gameObjects.push(body);
     };
 
+    Engine.addAll = function (bodies) {
+        for (let body of bodies) {
+            this.addBody(body)
+        }
+    };
+
     Engine.impulseSolver = function () {
         for (let body1 of this.gameObjects) {
             for (let body2 of this.gameObjects) {

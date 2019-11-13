@@ -30,9 +30,19 @@ module.exports = Body;
         if (options.color) {
             this.color = options.color
         } else {
-            this.color = "#000000"
+            this.color = this.randomColor()
         }
+        this.isStatic = options.isStatic || false;
         return Object.assign({}, this)
+    };
+
+    Body.randomColor = function () {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
     };
 
     Body.polygon = function (vertices, x, y, options = {}) {
@@ -66,9 +76,20 @@ module.exports = Body;
         if (options.color) {
             this.color = options.color
         } else {
-            this.color = "#000000"
+            this.color = this.randomColor()
         }
+        this.isStatic = options.isStatic || false;
         return Object.assign({}, this)
+    };
+
+    Body.circle = function (num_of_vertices, radius, x, y, options = {}) {
+        let positions = [];
+        for (let i = 0; i < num_of_vertices; i++) {
+            let pos_x = Math.cos(2.0 * Math.PI / num_of_vertices * i) * radius;
+            let pos_y = Math.sin(2.0 * Math.PI / num_of_vertices * i) * radius;
+            positions.push([pos_x, pos_y])
+        }
+        return Body.polygon(positions, x, y, options)
     };
 
     Body.draw = function (ctx, debug) {
@@ -124,6 +145,9 @@ module.exports = Body;
     };
 
     Body.applyImpulse = function (P, r) {
+        if (this.isStatic) {
+            return
+        }
         this.v.x -= P.x * this.mInv;
         this.v.y -= P.y * this.mInv;
         this.omega -= this.IInv * r.cross(P);

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shapes</title>
+    <script src="../build/end3in.js"></script>
+</head>
+<body style="margin: 0;">
+
+<canvas height="1000px" id="canvas" width="1000px"></canvas>
+<script>
+    var Engine = end3in.Engine,
+        Body = end3in.Body,
+        Collision = end3in.Collision;
+    let engine = Engine.create();
+
+    var bowlB = Body.rect(5, 2,
+        2, 5.0, {
+            'color': "rgba(0,0,0,0.93)",
+            "isStatic": true
+        });
+    var bowlL = Body.rect(5, 2,
+        -0, 4.5, {
+            'color': "rgba(0,0,0,0.93)",
+            "isStatic": true,
+            'rot': Math.PI / 4
+        });
+    var bowlR = Body.rect(5, 2,
+        4, 4.5, {
+            'color': "rgba(0,0,0,0.93)",
+            "isStatic": true,
+            'rot': -Math.PI / 4
+        });
+    var gameObjects = [];
+    for (let i = 0; i < 5; i++) {
+        let obj = Body.circle(8, 0.5, i, 2);
+        gameObjects.push(obj)
+    }
+
+    engine.addBody(bowlB);
+    engine.addBody(bowlL);
+    engine.addBody(bowlR);
+    engine.addAll(gameObjects);
+    engine.start();
+
+
+    function setup() {
+    }
+
+    setup();
+
+    document.onmousedown = function (event) {
+        setup()
+    }
+
+</script>
+
+</body>
+</html>
