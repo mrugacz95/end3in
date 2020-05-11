@@ -64,5 +64,9 @@ module.exports = Vec2;
 
     Vec2.div = function (divider) {
         return Vec2.create(this.x / divider, this.y / divider);
+    };
+
+    Vec2.pseudoCross = function (value) {
+        return Vec2.create(-value * this.x, value * this.y)
     }
 }());

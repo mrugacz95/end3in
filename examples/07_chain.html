@@ -5,12 +5,44 @@
     <title>Chain</title>
     <script src="../build/end3in.js"></script>
 </head>
-<body>
+<body style="margin: 0;">
+<canvas height="1000px" id="canvas" width="1000px"></canvas>
 
 <script>
-    let Solver = end3in.Solver,
-        Body = end3in.Body;
+    let Body = end3in.Body,
+        Joint = end3in.Joint,
+        Engine = end3in.Engine;
 
+    engine = Engine.create(true, 'constraint');
+    engine.scale = 50;
+
+    let bodies = [Body.rect(3, 0.25, 0.25, 0.125)];
+    let joints = [];
+    let lastBody = bodies[0];
+    for (let i = 0; i < 10; i++) {
+        let body = Body.circle(0, 0, 0.25);
+        bodies.push(body);
+        let joint = Joint.create(lastBody, body, Vec2.create(i, i));
+        joints.push(joint);
+        lastBody = body;
+    }
+    engine.addAllBodies(bodies);
+    engine.addAllJoints(joints);
+    engine.g = 0;
+    engine.start();
+
+    function setup() {
+        for (let i = 1; i < bodies.length; i++) {
+            bodies[i].pos = Vec2.create(i * 0.5, i * 0.5);
+            bodies[i].v = Vec2.create(0, 0);
+        }
+    }
+
+    setup();
+
+    document.onmousedown = function (event) {
+        setup()
+    }
 </script>
 
 </body>

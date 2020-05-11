@@ -13,42 +13,21 @@
         Body = end3in.Body,
         Collision = end3in.Collision;
     let engine = Engine.create();
+    engine.g = 0;
 
-    var bowlB = Body.rect(4.3, 1.6,
-        2, 5.0, {
-            'color': "rgba(0,0,0,0.93)",
-            "isStatic": true
-        });
-    var bowlL = Body.rect(3, 2,
-        -0.5, 4, {
-            'color': "rgba(0,0,0,0.93)",
-            "isStatic": true,
-            'rot': Math.PI / 4
-        });
-    var bowlR = Body.rect(3, 2,
-        4.5, 4, {
-            'color': "rgba(0,0,0,0.93)",
-            "isStatic": true,
-            'rot': -Math.PI / 4
-        });
     var gameObjects = [];
     for (let i = 0; i < 6; i++) {
-        let obj = Body.regularPolygon(8, 0.5, -0.5 + i, 2);
+        let obj = Body.circle(0.5, -0.5 + i, 0.25);
         gameObjects.push(obj)
     }
-
-    engine.addBody(bowlB);
-    engine.addBody(bowlL);
-    engine.addBody(bowlR);
     engine.addAllBodies(gameObjects);
     engine.start();
-
 
     function setup() {
         for (let i = 0; i < gameObjects.length; i++) {
             gameObjects[i].pos = Vec2.create(-0.5 + i, 2);
             gameObjects[i].omega = 0;
-            gameObjects[i].v = Vec2.create(0, 0);
+            gameObjects[i].v = Vec2.create(Math.random(), Math.random());
         }
     }
 

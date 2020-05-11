@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -154,6 +154,10 @@ module.exports = Vec2;
 
     Vec2.div = function (divider) {
         return Vec2.create(this.x / divider, this.y / divider);
+    };
+
+    Vec2.pseudoCross = function (value) {
+        return Vec2.create(-value * this.x, value * this.y)
     }
 }());
 
@@ -169,28 +173,33 @@ module.exports = Collision;
 
 (function () {
     Collision.areColliding = function (body1, body2) {
-        var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-        var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-        var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-        var b2Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-        for (let point of body1.points) {
-            let p = point.copy().rotate(body1.rot).transpose(body1.pos.x, body1.pos.y);
-            b1X = Vec2.create(Math.min(b1X.x, p.x), Math.max(b1X.y, p.x));
-            b1Y = Vec2.create(Math.min(b1Y.x, p.y), Math.max(b1Y.y, p.y));
+        if(body1.type !== body2.type){return false} // TODO add more calculations
+        if(body1.type === 'polygon') {
+            var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+            var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+            var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+            var b2Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+            for (let point of body1.points) {
+                let p = point.copy().rotate(body1.rot).transpose(body1.pos.x, body1.pos.y);
+                b1X = Vec2.create(Math.min(b1X.x, p.x), Math.max(b1X.y, p.x));
+                b1Y = Vec2.create(Math.min(b1Y.x, p.y), Math.max(b1Y.y, p.y));
+            }
+            for (let point of body2.points) {
+                let p = point.copy().rotate(body2.rot).transpose(body2.pos.x, body2.pos.y);
+                b2X = Vec2.create(Math.min(b2X.x, p.x), Math.max(b2X.y, p.x));
+                b2Y = Vec2.create(Math.min(b2Y.x, p.y), Math.max(b2Y.y, p.y));
+            }
+            return b1X.x < b2X.y &&
+                b1X.y > b2X.x &&
+                b1Y.x < b2Y.y &&
+                b1Y.y > b2Y.x;
+        } else if (body1.type === 'circle'){
+            return body1.pos.sub(body2.pos).sqrtMagnitude() < body1.radious + body2.radious;
         }
-        for (let point of body2.points) {
-            let p = point.copy().rotate(body2.rot).transpose(body2.pos.x, body2.pos.y);
-            b2X = Vec2.create(Math.min(b2X.x, p.x), Math.max(b2X.y, p.x));
-            b2Y = Vec2.create(Math.min(b2Y.x, p.y), Math.max(b2Y.y, p.y));
-        }
-        return b1X.x < b2X.y &&
-            b1X.y > b2X.x &&
-            b1Y.x < b2Y.y &&
-            b1Y.y > b2Y.x;
-
     };
 
     Collision.calculateSAT = function (body1, body2, options = {}) {
+        if(body1.type === 'circle' || body2.type === 'circle') return null; // TODO add more calculations
         let context = !options.debug || options.context;
         let debug = options.debug || false;
 
@@ -320,18 +329,74 @@ module.exports = Collision;
 
 /***/ }),
 /* 2 */
+/***/ (function(module, exports) {
+
+var Solver = {};
+
+module.exports = Solver;
+
+(function () {
+        Solver.solve = function (mat, b, iterations) {
+            // Ax = b
+            let x = [];
+            for (let i = 0; i < mat.length; i++) {
+                x.push(0);
+            }
+            for (let iter = 0; iter < iterations; iter++) {
+                for (let i = 0; i < mat.length; i++) {
+                    let sum = b[i];
+                    for (let j = 0; j < mat[i].length; j++) {
+                        if (j !== i) {
+                            sum -= x[j] * mat[i][j];
+                        }
+                    }
+                    x[i] = sum / mat[i][i];
+                }
+            }
+            return x;
+        };
+        Solver.getUpper = function (mat) {
+            let upper = [];
+            let lower = [];
+            for (let row = 0; row < mat.length; row++) {
+                let newLowerRow = [];
+                let newUpperRow = [];
+                for (let col = 0; col < max[row].length; col++) {
+                    if (row >= col) {
+                        newUpperRow.push(mat[row][col]);
+                        newLowerRow.push(0)
+                    } else {
+                        newUpperRow.push(0);
+                        newLowerRow.push(mat[row][col]);
+                    }
+                }
+                upper.push(newUpperRow);
+                lower.push(newLowerRow);
+            }
+            return {'lower': lower, 'upper': upper};
+        }
+
+
+    }
+    ()
+)
+;
+
+/***/ }),
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 end3in = {};
 
 end3in.Vector = __webpack_require__(0);
-end3in.Body = __webpack_require__(3);
-end3in.Engine = __webpack_require__(4);
+end3in.Body = __webpack_require__(4);
+end3in.Engine = __webpack_require__(5);
 end3in.Collision = __webpack_require__(1);
-end3in.Solver = __webpack_require__(5);
+end3in.Solver = __webpack_require__(2);
+end3in.Joint = __webpack_require__(6);
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(0);
@@ -353,7 +418,6 @@ module.exports = Body;
         this.height = height;
         this.v = Vec2.create(0, 0);
         this.omega = 0.0;
-        this.arbiters = [];
         if (options.isStatic) {
             this.m = 0;
             this.mInv = 0;
@@ -397,17 +461,18 @@ module.exports = Body;
             this.mInv = 0;
             this.IInv = 0;
         } else {
-            this.m = 0;
-            var last = this.points[this.points.length - 1];
+            let area = 0;
+            let last = this.points[this.points.length - 1];
             for (let point of this.points) {
-                this.m += (last.x * point.y) - (last.y * point.x);
+                area += (last.x * point.y) - (last.y * point.x);
                 last = point
             }
-            this.m = 900 * Math.abs(this.m / 2.0);
+            area /= 2.0;
+            this.m = 900 * Math.abs(area);
             // aprox with circle
             this.mInv = 1.0 / this.m;
-            this.IInv = (Math.max.apply(Math, this.points.map((v) => (v.sqrtMagnitude()))));
-            this.IInv = 2 / (this.m * this.IInv * this.IInv);
+            const maxR = (Math.max.apply(Math, this.points.map((v) => (v.sqrtMagnitude()))));
+            this.IInv = 2 / (this.m * maxR * maxR);
         }
         if (options.color) {
             this.color = options.color
@@ -415,10 +480,11 @@ module.exports = Body;
             this.color = this.randomColor()
         }
         this.isStatic = options.isStatic || false;
+        this.type = 'polygon';
         return Object.assign({}, this)
     };
 
-    Body.circle = function (num_of_vertices, radius, x, y, options = {}) {
+    Body.regularPolygon = function (num_of_vertices, radius, x, y, options = {}) {
         let positions = [];
         for (let i = 0; i < num_of_vertices; i++) {
             let pos_x = Math.cos(2.0 * Math.PI / num_of_vertices * i) * radius;
@@ -428,32 +494,66 @@ module.exports = Body;
         return Body.polygon(positions, x, y, options)
     };
 
-    Body.draw = function (ctx, debug) {
-        ctx.beginPath();
-        for (let i = 0; i < this.points.length + 1; i++) {
-            let next = this.points[i % this.points.length]
-                .rotate(this.rot)
-                .transpose(this.pos.x, this.pos.y);
-            if (i === 0) {
-                ctx.moveTo(next.x, next.y);
-            } else {
-                ctx.lineTo(next.x, next.y)
-            }
+    Body.circle = function (x, y, radius, options = {}) {
+        this.pos = Vec2.create(x, y);
+        this.rot = 0.0;
+        this.v = Vec2.create(0, 0);
+        this.omega = 0.0;
+        this.IInv = 0;
+        if (options.isStatic) {
+            this.m = 0;
+            this.mInv = 0;
+        } else {
+            let area = 2 * Math.PI * radius * radius;
+            this.m = 900 * area;
+            // aprox with circle
+            this.mInv = 1.0 / this.m;
+            this.IInv = 2 / (this.m * radius * radius);
         }
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        if (debug) {
-            for (axis of this.axes()) {
-                let mid = axis.p1.add(axis.p2).scale(0.5).rotate(this.rot).add(this.pos);
-                let norm = axis.axis.rotate(this.rot).normal();
-                ctx.lineWidth = 1 / engine.scale;
-                ctx.strokeStyle = "#7a7a7a";
-                ctx.beginPath();
-                ctx.moveTo(mid.x, mid.y);
-                ctx.lineTo(mid.x + norm.x, mid.y + norm.y);
-                ctx.stroke()
-            }
+        if (options.color) {
+            this.color = options.color
+        } else {
+            this.color = this.randomColor()
+        }
+        this.isStatic = options.isStatic || false;
+        this.type = 'circle';
+        this.radius = radius;
+        return Object.assign({}, this)
+    };
 
+    Body.draw = function (ctx, debug) {
+        if (this.type === 'polygon') {
+            ctx.beginPath();
+            for (let i = 0; i < this.points.length + 1; i++) {
+                let next = this.points[i % this.points.length]
+                    .rotate(this.rot)
+                    .transpose(this.pos.x, this.pos.y);
+                if (i === 0) {
+                    ctx.moveTo(next.x, next.y);
+                } else {
+                    ctx.lineTo(next.x, next.y)
+                }
+            }
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            if (debug) {
+                for (axis of this.axes()) {
+                    let mid = axis.p1.add(axis.p2).scale(0.5).rotate(this.rot).add(this.pos);
+                    let norm = axis.axis.rotate(this.rot).normal();
+                    ctx.lineWidth = 1 / engine.scale;
+                    ctx.strokeStyle = "#7a7a7a";
+                    ctx.beginPath();
+                    ctx.moveTo(mid.x, mid.y);
+                    ctx.lineTo(mid.x + norm.x, mid.y + norm.y);
+                    ctx.stroke()
+                }
+
+            }
+        } else if (this.type === 'circle') {
+            ctx.lineWidth = 1 / engine.scale;
+            ctx.beginPath();
+            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
+            ctx.stroke();
         }
 
     };
@@ -512,10 +612,11 @@ module.exports = Body;
 }());
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(1);
+__webpack_require__(2);
 
 var Engine = {};
 
@@ -538,6 +639,7 @@ module.exports = Engine;
         this.g = -9.81;
         this.gameObjects = [];
         this.newBodyId = 0;
+        this.joints = [];
         return Object.assign({}, this)
     };
 
@@ -563,6 +665,8 @@ module.exports = Engine;
         }
         if (this.solver === 'impulse') {
             this.impulseSolver();
+        } else if (this.solver === 'constraint') {
+            this.constraintSolver();
         }
         for (let obj of this.gameObjects) {
             obj.update(this.dt);
@@ -586,7 +690,7 @@ module.exports = Engine;
         this.gameObjects.push(body);
     };
 
-    Engine.addAll = function (bodies) {
+    Engine.addAllBodies = function (bodies) {
         for (let body of bodies) {
             this.addBody(body)
         }
@@ -599,6 +703,9 @@ module.exports = Engine;
                     continue;
                 }
                 if (!Collision.areColliding(body1, body2)) {
+                    continue;
+                }
+                if (body1.type === 'circle' && body1.type === 'circle') { //TODO add more cases
                     continue;
                 }
                 let mtv = Collision.calculateSAT(body1, body2);
@@ -637,8 +744,6 @@ module.exports = Engine;
 
                     let refVector = P.scale(sign);
                     let indVector = P.scale(-1 * sign);
-                    incident.arbiters.push({'vec': indVector, 'point': mtv.penetratingPoint});
-                    reference.arbiters.push({'vec': refVector, 'point': mtv.referencePoint});
                     incident.applyImpulse(indVector,
                         mtv.penetratingPoint);
                     reference.applyImpulse(refVector,
@@ -647,62 +752,54 @@ module.exports = Engine;
             }
         }
     };
+    Engine.addJoint = function (joint) {
+        this.joints.push(joint)
+    };
+    Engine.addAllJoints = function (joints) {
+        for (let joint of joints) {
+            this.addJoint(joint);
+        }
+    };
+
+    Engine.constraintSolver = function () {
+        for (let i = 0; i < 4; i++) {
+            for (let c of this.joints) {
+                let J = [];
+                let pA = c.local1Anchor.rotate(c.body1.rot).transpose(c.body1.pos);
+                let pB = c.local1Anchor.rotate(c.body2.rot).transpose(c.body2.pos);
+                J.push(2 * (pA.x - pB.x),
+                    2 * (pA.y - pB.y),
+                    // 2 * pA.sub(pB).scale(-1).cross(pA.sub(c.body1.pos)),
+                    2 * (pB.x - pA.x),
+                    2 * (pB.y - pA.y),
+                    // 2 * pA.sub(pB).scale(-1).cross(pB.sub(c.body1.pos)),
+                );
+                let bias = (0.2 / this.dt) * pA.sub(pB).sqrtMagnitude();
+                // let lambda = -
+            }
+        }
+    };
 }());
 
 /***/ }),
-/* 5 */
-/***/ (function(module, exports) {
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
 
-var Solver = {};
+__webpack_require__(0);
 
-module.exports = Solver;
+var Joint = {};
+
+module.exports = Joint;
 
 (function () {
-        Solver.solve = function (mat, b, iterations) {
-            // Ax = b
-            let x = [];
-            for (let i = 0; i < mat.length; i++) {
-                x.push(0);
-            }
-            for (let iter = 0; iter < iterations; iter++) {
-                for (let i = 0; i < mat.length; i++) {
-                    let sum = b[i];
-                    for (let j = 0; j < mat[i].length; j++) {
-                        if (j !== i) {
-                            sum -= x[j] * mat[i][j];
-                        }
-                    }
-                    x[i] = sum / mat[i][i];
-                }
-            }
-            return x;
-        };
-        Solver.getUpper = function (mat) {
-            let upper = [];
-            let lower = [];
-            for (let row = 0; row < mat.length; row++) {
-                let newLowerRow = [];
-                let newUpperRow = [];
-                for (let col = 0; col < max[row].length; col++) {
-                    if (row >= col) {
-                        newUpperRow.push(mat[row][col]);
-                        newLowerRow.push(0)
-                    } else {
-                        newUpperRow.push(0);
-                        newLowerRow.push(mat[row][col]);
-                    }
-                }
-                upper.push(newUpperRow);
-                lower.push(newLowerRow);
-            }
-            return {'lower': lower, 'upper': upper};
-        }
-
-
+    Joint.create = function (body1, body2, position) {
+        this.body1 = body1;
+        this.body2 = body2;
+        this.local1Anchor = position.sub(body1.pos).rotate(body1.rot);
+        this.local2Anchor = position.sub(body2.pos).rotate(body2.rot);
+        return Object.assign({}, this)
     }
-    ()
-)
-;
+}());
 
 /***/ })
 /******/ ]);

@@ -1,4 +1,5 @@
 require('./Collision');
+require('./Solver');
 
 var Engine = {};
 
@@ -21,6 +22,7 @@ module.exports = Engine;
         this.g = -9.81;
         this.gameObjects = [];
         this.newBodyId = 0;
+        this.joints = [];
         return Object.assign({}, this)
     };
 
@@ -46,6 +48,8 @@ module.exports = Engine;
         }
         if (this.solver === 'impulse') {
             this.impulseSolver();
+        } else if (this.solver === 'constraint') {
+            this.constraintSolver();
         }
         for (let obj of this.gameObjects) {
             obj.update(this.dt);
@@ -69,7 +73,7 @@ module.exports = Engine;
         this.gameObjects.push(body);
     };
 
-    Engine.addAll = function (bodies) {
+    Engine.addAllBodies = function (bodies) {
         for (let body of bodies) {
             this.addBody(body)
         }
@@ -82,6 +86,9 @@ module.exports = Engine;
                     continue;
                 }
                 if (!Collision.areColliding(body1, body2)) {
+                    continue;
+                }
+                if (body1.type === 'circle' && body1.type === 'circle') { //TODO add more cases
                     continue;
                 }
                 let mtv = Collision.calculateSAT(body1, body2);
@@ -120,13 +127,38 @@ module.exports = Engine;
 
                     let refVector = P.scale(sign);
                     let indVector = P.scale(-1 * sign);
-                    incident.arbiters.push({'vec': indVector, 'point': mtv.penetratingPoint});
-                    reference.arbiters.push({'vec': refVector, 'point': mtv.referencePoint});
                     incident.applyImpulse(indVector,
                         mtv.penetratingPoint);
                     reference.applyImpulse(refVector,
                         mtv.referencePoint);
                 }
+            }
+        }
+    };
+    Engine.addJoint = function (joint) {
+        this.joints.push(joint)
+    };
+    Engine.addAllJoints = function (joints) {
+        for (let joint of joints) {
+            this.addJoint(joint);
+        }
+    };
+
+    Engine.constraintSolver = function () {
+        for (let i = 0; i < 4; i++) {
+            for (let c of this.joints) {
+                let J = [];
+                let pA = c.local1Anchor.rotate(c.body1.rot).transpose(c.body1.pos);
+                let pB = c.local1Anchor.rotate(c.body2.rot).transpose(c.body2.pos);
+                J.push(2 * (pA.x - pB.x),
+                    2 * (pA.y - pB.y),
+                    // 2 * pA.sub(pB).scale(-1).cross(pA.sub(c.body1.pos)),
+                    2 * (pB.x - pA.x),
+                    2 * (pB.y - pA.y),
+                    // 2 * pA.sub(pB).scale(-1).cross(pB.sub(c.body1.pos)),
+                );
+                let bias = (0.2 / this.dt) * pA.sub(pB).sqrtMagnitude();
+                // let lambda = -
             }
         }
     };
