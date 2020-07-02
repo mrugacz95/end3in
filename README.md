@@ -2,7 +2,17 @@
 
 Samples writen in JS for understanding physic engine mechanisms.
 
-# Knowledge
+## Installation
+
+```bash
+npm install
+```
+
+## Usages
+
+Open examples in browser
+
+## Knowledge
 
 * [GDC2006 Catto Erin - PhysicsTutorial](https://github.com/erincatto/box2d-lite/blob/master/docs/GDC2006_Catto_Erin_PhysicsTutorial.pdf)
 * [GDC2014 Catto Erin -  Physics for Game Programmers: Understanding Constraints](https://www.youtube.com/watch?v=SHinxAhv1ZE)

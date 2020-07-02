@@ -1,4 +1,4 @@
-require('./Vector');
+require('./vector');
 
 var Joint = {};
 

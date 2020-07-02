@@ -2,7 +2,7 @@
   "name": "end3in",
   "version": "1.0.0",
   "description": "Simple physic engine ",
-  "main": "build/end3in.js",
+  "main": "dist/end3in.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode production",
@@ -23,9 +23,15 @@
     "url": "https://github.com/mrugacz95/end3in/issues"
   },
   "homepage": "https://github.com/mrugacz95/end3in#readme",
-  "dependencies": {},
+  "dependencies": {
+    "awesome-typescript-loader": "^5.2.1",
+    "lodash": "^4.17.15",
+    "source-map-loader": "^1.0.0"
+  },
   "devDependencies": {
-    "webpack": "^4.41.1",
-    "webpack-cli": "^3.3.9"
+    "ts-loader": "^7.0.5",
+    "typescript": "^3.9.5",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
   }
 }
