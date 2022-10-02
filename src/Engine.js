@@ -1,7 +1,7 @@
 require('./Collision');
 require('./Solver');
 
-var Engine = {};
+const Engine = {};
 
 module.exports = Engine;
 
@@ -114,7 +114,7 @@ module.exports = Engine;
                     let rn1 = mtv.penetratingPoint.cross(mtv.normal);
                     let rn2 = mtv.referencePoint.cross(mtv.normal);
 
-                    var k = mtv.penetratingBody.mInv + mtv.referenceBody.mInv;
+                    let k = mtv.penetratingBody.mInv + mtv.referenceBody.mInv;
                     k += mtv.penetratingBody.IInv * (rn1 * rn1);
                     k += mtv.referenceBody.IInv * (rn2 * rn2);
 

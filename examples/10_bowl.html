@@ -9,29 +9,29 @@
 
 <canvas height="1000px" id="canvas" width="1000px"></canvas>
 <script>
-    var Engine = end3in.Engine,
+    const Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision;
     let engine = Engine.create();
 
-    var bowlB = Body.rect(4.3, 1.6,
+    const bowlB = Body.rect(4.3, 1.6,
         2, 5.0, {
             'color': "rgba(0,0,0,0.93)",
             "isStatic": true
         });
-    var bowlL = Body.rect(3, 2,
+    const bowlL = Body.rect(3, 2,
         -0.5, 4, {
             'color': "rgba(0,0,0,0.93)",
             "isStatic": true,
             'rot': Math.PI / 4
         });
-    var bowlR = Body.rect(3, 2,
+    const bowlR = Body.rect(3, 2,
         4.5, 4, {
             'color': "rgba(0,0,0,0.93)",
             "isStatic": true,
             'rot': -Math.PI / 4
         });
-    var gameObjects = [];
+    const gameObjects = [];
     for (let i = 0; i < 6; i++) {
         let obj = Body.regularPolygon(8, 0.5, -0.5 + i, 2);
         gameObjects.push(obj)
@@ -54,7 +54,7 @@
 
     setup();
 
-    document.onmousedown = function (event) {
+    document.onmousedown = function () {
         setup()
     }
 

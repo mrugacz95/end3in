@@ -9,16 +9,16 @@
 
 <canvas height="1000px" id="canvas" width="1000px"></canvas>
 <script>
-    var Engine = end3in.Engine,
+    const Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision;
     let engine = Engine.create();
-    var rect1 = Body.rect(0.5, 0.5,
+    const rect1 = Body.rect(0.5, 0.5,
         1, 6, {
-        'color': "rgba(230,23,74,0.93)",
-        "rot": Math.PI / 6
-    });
-    var rect2 = Body.rect(0.5, 0.5,
+            'color': "rgba(230,23,74,0.93)",
+            "rot": Math.PI / 6
+        });
+    const rect2 = Body.rect(0.5, 0.5,
         0, 6, {
             'color': "rgba(26,230,73,0.93)",
             "rot": Math.PI / 6
@@ -31,7 +31,7 @@
             'color': "rgba(230,182,46,0.93)",
             "rot": Math.PI / 7
         });
-    var ground = Body.rect(10, 2,
+    const ground = Body.rect(10, 2,
         0, 5.0, {
             'color': "rgba(0,0,0,0.93)",
             "isStatic": true
@@ -59,7 +59,7 @@
 
     setup();
 
-    document.onmousedown = function (event) {
+    document.onmousedown = function () {
         setup()
     }
 

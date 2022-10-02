@@ -1,6 +1,6 @@
 require('./Vector');
 
-var Collision = {};
+const Collision = {};
 
 module.exports = Collision;
 
@@ -8,10 +8,10 @@ module.exports = Collision;
     Collision.areColliding = function (body1, body2) {
         if(body1.type !== body2.type){return false} // TODO add more calculations
         if(body1.type === 'polygon') {
-            var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-            var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-            var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-            var b2Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+            let b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+            let b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+            let b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
+            let b2Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
             for (let point of body1.points) {
                 let p = point.copy().rotate(body1.rot).transpose(body1.pos.x, body1.pos.y);
                 b1X = Vec2.create(Math.min(b1X.x, p.x), Math.max(b1X.y, p.x));

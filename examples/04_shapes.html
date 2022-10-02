@@ -9,28 +9,28 @@
 
 <canvas height="1000px" id="canvas" width="1000px"></canvas>
 <script>
-    var Engine = end3in.Engine,
+    const Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision;
     let engine = Engine.create(debug = true, solver = "none");
-    var triangle = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
+    const triangle = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
         'isStatic': true,
         'color': "#141ae6EE",
         "rot": 0
     }); // Math.PI / 4
-    var polygon1 = Body.polygon([[-0.25, 0], [0, -0.5], [0.69, -0.76], [1.2, 0.8]],
+    const polygon1 = Body.polygon([[-0.25, 0], [0, -0.5], [0.69, -0.76], [1.2, 0.8]],
         0.8, 4.2, {
             'isStatic': true,
             'color': "#141ae6EE",
             "rot": Math.PI / 6
         });
-    var polygon2 = Body.polygon([[0.62, -0.40], [0.65, 0.25], [0.44, 0.37], [-0.4, -0.20]],
+    const polygon2 = Body.polygon([[0.62, -0.40], [0.65, 0.25], [0.44, 0.37], [-0.4, -0.20]],
         3.3, 2.0, {
             'isStatic': true,
             'color': "#141ae6EE",
             "rot": Math.PI / 6
         });
-    var rect1 = Body.rect(1, 1, 2, -1, {
+    const rect1 = Body.rect(1, 1, 2, -1, {
         'isStatic': true,
         'color': "#141ae6EE",
         "rot": Math.PI / 4
@@ -39,8 +39,8 @@
     engine.addBody(polygon1);
     engine.addBody(polygon2);
     engine.addBody(rect1);
-    var clear = engine.clear;
-    var draw = engine.draw;
+    const clear = engine.clear;
+    const draw = engine.draw;
     engine.clear = function () {
     };
     engine.draw = function () {
@@ -48,10 +48,10 @@
     engine.start();
 
     document.addEventListener("keydown", event => {
-        if (event.isComposing || event.keyCode === 37) {
+        if (event.isComposing || event.code === 'ArrowLeft') {
             triangle.rot += 2 * Math.PI / 180.0;
         }
-        if (event.isComposing || event.keyCode === 39) {
+        if (event.isComposing || event.code === 'ArrowRight') {
             triangle.rot -= 2 * Math.PI / 180.0;
         }
         clear.call(engine);

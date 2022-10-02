@@ -9,16 +9,16 @@
 
 <canvas height="1000px" id="canvas" width="1000px"></canvas>
 <script>
-    var Engine = end3in.Engine,
+    const Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision;
     let engine = Engine.create();
-    var rect1 = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
+    const rect1 = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
         'isStatic': true,
         'color': "#141ae6EE",
         "rot": 0
     }); // Math.PI / 4
-    var polygon2 = Body.rect(2,2,
+    const polygon2 = Body.rect(2, 2,
         3.3, 2.0, {
             'isStatic': true,
             'color': "#141ae6EE",
@@ -26,8 +26,8 @@
         });
     engine.addBody(rect1);
     engine.addBody(polygon2);
-    var clear = engine.clear;
-    var draw = engine.draw;
+    const clear = engine.clear;
+    const draw = engine.draw;
     engine.clear = function () {
     };
     engine.draw = function () {

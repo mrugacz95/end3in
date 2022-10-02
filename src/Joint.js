@@ -1,6 +1,6 @@
 require('./Vector');
 
-var Joint = {};
+const Joint = {};
 
 module.exports = Joint;
 

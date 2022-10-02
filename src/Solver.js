@@ -1,4 +1,4 @@
-var Solver = {};
+const Solver = {};
 
 module.exports = Solver;
 

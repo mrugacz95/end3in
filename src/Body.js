@@ -1,6 +1,7 @@
 require('./Vector');
+const Vec2 = require("./Vector");
 
-var Body = {};
+const Body = {};
 
 module.exports = Body;
 
@@ -36,9 +37,9 @@ module.exports = Body;
     };
 
     Body.randomColor = function () {
-        var letters = '0123456789ABCDEF';
-        var color = '#';
-        for (var i = 0; i < 6; i++) {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
             color += letters[Math.floor(Math.random() * 16)];
         }
         return color;
@@ -68,7 +69,7 @@ module.exports = Body;
             }
             area /= 2.0;
             this.m = 900 * Math.abs(area);
-            // aprox with circle
+            // approximate with circle
             this.mInv = 1.0 / this.m;
             const maxR = (Math.max.apply(Math, this.points.map((v) => (v.sqrtMagnitude()))));
             this.IInv = 2 / (this.m * maxR * maxR);
@@ -199,7 +200,7 @@ module.exports = Body;
     };
 
     Body.isInside = function (point) {
-        for (a of this.axes()) {
+        for (let a of this.axes()) {
             let p1 = a.p1.rotate(this.rot).transpose(this.pos.x, this.pos.y);
             let p2 = a.p2.rotate(this.rot).transpose(this.pos.x, this.pos.y);
             let s = p1.sub(p2);

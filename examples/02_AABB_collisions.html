@@ -9,12 +9,12 @@
 
 <canvas width="1000px" height="1000px" id="canvas"></canvas>
 <script>
-    var Engine = end3in.Engine,
+    const Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision;
-    var engine = Engine.create();
-    var rect1 = Body.rect(0.5, 0.5, 3, 4, {'isStatic': true, 'color': "#141ae6EE", "rot": 0.22});
-    var rect2 = Body.rect(1.0, 1.5, 5, 6, {'isStatic': true, 'color': "#141ae6EE", "rot": 0.1});
+    const engine = Engine.create();
+    const rect1 = Body.rect(0.5, 0.5, 3, 4, {'isStatic': true, 'color': "#141ae6EE", "rot": 0.22});
+    const rect2 = Body.rect(1.0, 1.5, 5, 6, {'isStatic': true, 'color': "#141ae6EE", "rot": 0.1});
     engine.addBody(rect1);
     engine.addBody(rect2);
     engine.start();

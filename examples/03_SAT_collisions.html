@@ -10,18 +10,18 @@
 
 <canvas width="1000px" height="1000px" id="canvas"></canvas>
 <script>
-    var Engine = end3in.Engine,
+    const Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision;
-    var engine = Engine.create();
+    const engine = Engine.create();
     engine.scale = 100;
-    var rect1 = Body.rect(0.5, 0.5, 1, 2, {'isStatic': true, 'color': "#141ae6EE", "rot": 0.1});
-    var rect2 = Body.rect(1.0, 1.5, 2, 2.5, {'isStatic': true, 'color': "#141ae6EE", "rot": Math.PI / 4});
+    const rect1 = Body.rect(0.5, 0.5, 1, 2, {'isStatic': true, 'color': "#141ae6EE", "rot": 0.1});
+    const rect2 = Body.rect(1.0, 1.5, 2, 2.5, {'isStatic': true, 'color': "#141ae6EE", "rot": Math.PI / 4});
     engine.addBody(rect1);
     engine.addBody(rect2);
     engine.start();
     document.onmousemove = function (event) {
-        rect1.pos = Vec2.create(event.clientX / engine.scale, event.clientY / engine.scale).sub(engine.cameraPos);;
+        rect1.pos = Vec2.create(event.clientX / engine.scale, event.clientY / engine.scale).sub(engine.cameraPos);
         if (Collision.calculateSAT(rect1, rect2, {'debug': true, 'context': engine.ctx})) {
             rect1.color = "#e62131EE";
         } else {
