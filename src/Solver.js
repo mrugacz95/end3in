@@ -42,9 +42,5 @@ module.exports = Solver;
             }
             return {'lower': lower, 'upper': upper};
         }
-
-
-    }
-    ()
-)
-;
+    }()
+);

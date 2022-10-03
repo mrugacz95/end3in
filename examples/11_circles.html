@@ -5,13 +5,12 @@
     <title>Shapes</title>
     <script src="../build/end3in.js"></script>
 </head>
-<body style="margin: 0;">
-
-<canvas height="1000px" id="canvas" width="1000px"></canvas>
+<body></body>
 <script>
     const Engine = end3in.Engine,
         Body = end3in.Body,
-        Collision = end3in.Collision;
+        Collision = end3in.Collision,
+        Graphics = end3in.Graphics;
     let engine = Engine.create();
     engine.g = 0;
 
@@ -22,6 +21,10 @@
     }
     engine.addAllBodies(gameObjects);
     engine.start();
+
+
+    const graphics = Graphics.create(1000, 1000, engine)
+    graphics.start()
 
     function setup() {
         for (let i = 0; i < gameObjects.length; i++) {
@@ -38,6 +41,4 @@
     }
 
 </script>
-
-</body>
 </html>

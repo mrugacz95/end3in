@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shapes</title>
+    <script src="../build/end3in.js"></script>
+</head>
+<body></body>
+<script>
+    const Engine = end3in.Engine,
+        Body = end3in.Body,
+        Collision = end3in.Collision,
+        Graphics = end3in.Graphics;
+    let engine = Engine.create(false, 'translation');
+    for (let i = 0 ; i < 20; i++){
+        let options = {rot: Math.PI / 4}
+        options = {}
+        engine.addBody(Body.rect(0.5, 0.5, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, options));
+    }
+    engine.g = 0;
+    engine.start();
+
+    const obj = engine.gameObjects[0]
+    obj.rot = Math.PI / 8
+
+    const graphics = Graphics.create(1000, 1000, engine)
+    graphics.start()
+
+    document.addEventListener("keydown", event => {
+        if (event.isComposing || event.code === 'ArrowUp') {
+            obj.pos = obj.pos.add(Vec2.create(0, -0.1))
+        }
+        if (event.isComposing || event.code === 'ArrowDown') {
+            obj.pos = obj.pos.add(Vec2.create(0, 0.1))
+        }
+        if (event.isComposing || event.code === 'ArrowLeft') {
+            obj.pos = obj.pos.add(Vec2.create(-0.1, 0))
+        }
+        if (event.isComposing || event.code === 'ArrowRight') {
+            obj.pos = obj.pos.add(Vec2.create(0.1, 0))
+        }
+    });
+
+
+</script>
+</html>

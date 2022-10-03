@@ -6,13 +6,12 @@
     <script src="../build/end3in.js"></script>
     <script src="../build/end3in.js"></script>
 </head>
-<body style="margin: 0;">
-
-<canvas width="1000px" height="1000px" id="canvas"></canvas>
+<body></body>
 <script>
     const Engine = end3in.Engine,
         Body = end3in.Body,
-        Collision = end3in.Collision;
+        Collision = end3in.Collision,
+        Graphics = end3in.Graphics;
     const engine = Engine.create();
     engine.scale = 100;
     const rect1 = Body.rect(0.5, 0.5, 1, 2, {'isStatic': true, 'color': "#141ae6EE", "rot": 0.1});
@@ -20,9 +19,14 @@
     engine.addBody(rect1);
     engine.addBody(rect2);
     engine.start();
+
+    const graphics = Graphics.create(1000, 1000, engine, true, 60, Vec2.create(6,6))
+
     document.onmousemove = function (event) {
-        rect1.pos = Vec2.create(event.clientX / engine.scale, event.clientY / engine.scale).sub(engine.cameraPos);
-        if (Collision.calculateSAT(rect1, rect2, {'debug': true, 'context': engine.ctx})) {
+        graphics.clear()
+        graphics.drawBodies(engine.gameObjects)
+        rect1.pos = graphics.clientToWorldPos(Vec2.create(event.clientX, event.clientY));
+        if (Collision.calculateSAT(rect1, rect2, {'debug': true, 'context': graphics.ctx})) {
             rect1.color = "#e62131EE";
         } else {
             rect1.color = "#141ae6EE";
@@ -30,6 +34,4 @@
     }
 
 </script>
-
-</body>
 </html>

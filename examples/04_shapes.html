@@ -5,13 +5,13 @@
     <title>Shapes</title>
     <script src="../build/end3in.js"></script>
 </head>
-<body style="margin: 0;">
-
-<canvas height="1000px" id="canvas" width="1000px"></canvas>
+<body></body>
 <script>
     const Engine = end3in.Engine,
         Body = end3in.Body,
-        Collision = end3in.Collision;
+        Collision = end3in.Collision,
+        Graphics = end3in.Graphics;
+
     let engine = Engine.create(debug = true, solver = "none");
     const triangle = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
         'isStatic': true,
@@ -35,17 +35,17 @@
         'color': "#141ae6EE",
         "rot": Math.PI / 4
     });
+
+
+    let graphics = Graphics.create(1000, 1000, engine, true)
+    graphics.start()
+
     engine.addBody(triangle);
     engine.addBody(polygon1);
     engine.addBody(polygon2);
     engine.addBody(rect1);
-    const clear = engine.clear;
-    const draw = engine.draw;
-    engine.clear = function () {
-    };
-    engine.draw = function () {
-    };
     engine.start();
+
 
     document.addEventListener("keydown", event => {
         if (event.isComposing || event.code === 'ArrowLeft') {
@@ -54,29 +54,20 @@
         if (event.isComposing || event.code === 'ArrowRight') {
             triangle.rot -= 2 * Math.PI / 180.0;
         }
-        clear.call(engine);
-        draw.call(engine);
     });
     document.onmousemove = function (event) {
-        clear.call(engine);
-        draw.call(engine);
-        triangle.pos = Vec2.create(event.clientX / engine.scale, event.clientY / engine.scale).sub(engine.cameraPos);
+        triangle.pos = graphics.clientToWorldPos(Vec2.create(event.clientX, event.clientY))
         triangle.color = "#141ae6EE";
 
-        engine.ctx.save();
-        engine.ctx.translate(engine.cameraPos.x * engine.scale, engine.cameraPos.y * engine.scale);
         for (let gameObj of engine.gameObjects) {
             if (gameObj === triangle) {
                 continue;
             }
-            if (Collision.calculateSAT(gameObj, triangle, {'context': engine.ctx, 'debug': true})) {
+            if (Collision.calculateSAT(gameObj, triangle, {'context': graphics.ctx, 'debug': true})) {
                 triangle.color = "#e62131EE";
             }
         }
-        engine.ctx.restore();
     }
 
 </script>
-
-</body>
 </html>

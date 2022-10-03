@@ -6,3 +6,4 @@ end3in.Engine = require('./Engine');
 end3in.Collision = require('./Collision');
 end3in.Solver = require('./Solver');
 end3in.Joint = require('./Joint');
+end3in.Graphics = require('./Graphics');

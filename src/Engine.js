@@ -1,3 +1,4 @@
+require('./Vector');
 require('./Collision');
 require('./Solver');
 
@@ -8,17 +9,9 @@ module.exports = Engine;
 (function () {
 
     Engine.create = function (debug = false, solver = 'impulse') {
-        this.canvas = document.getElementById('canvas');
         this.solver = solver;
-        this.ctx = canvas.getContext('2d');
-        this.scale = 60;
-        this.cameraPos = Vec2.create(3, 3);
-        this.dt = 1 / 60;
-        this.width = 10 * this.scale;
-        this.height = 10 * this.scale;
+        this.dt = 1 / 60; // take dt from elapsed time
         this.debug = debug;
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
         this.g = -9.81;
         this.gameObjects = [];
         this.newBodyId = 0;
@@ -27,20 +20,13 @@ module.exports = Engine;
     };
 
     Engine.start = function () {
-        self = this;
+        let self = this;
         window.setInterval(function () {
             self.update.call(self)
         }, 1000 * self.dt);
     };
 
-    Engine.clear = function () {
-        this.ctx.fillStyle = "#FFFFFF";
-        this.ctx.fillRect(0, 0, this.width, this.height);
-        this.ctx.fillStyle = "#000000";
-    };
-
     Engine.update = function () {
-        this.clear();
         for (let obj of this.gameObjects) {
             if (obj.mInv !== 0) {
                 obj.applyAcceleration(0, this.g, 0, engine.dt);
@@ -50,21 +36,12 @@ module.exports = Engine;
             this.impulseSolver();
         } else if (this.solver === 'constraint') {
             this.constraintSolver();
+        } else if (this.solver === 'translation') {
+            this.translationSolver();
         }
         for (let obj of this.gameObjects) {
             obj.update(this.dt);
         }
-        this.draw();
-    };
-
-    Engine.draw = function () {
-        this.ctx.save();
-        this.ctx.scale(this.scale, this.scale);
-        this.ctx.translate(this.cameraPos.x, this.cameraPos.y);
-        for (let obj of this.gameObjects) {
-            obj.draw(this.ctx, this.debug);
-        }
-        this.ctx.restore()
     };
 
     Engine.addBody = function (body) {
@@ -79,6 +56,36 @@ module.exports = Engine;
         }
     };
 
+    Engine.translationSolver = function (){
+        for (let body1 of this.gameObjects) {
+            for (let body2 of this.gameObjects) {
+                if (body2.bodyId >= body1.bodyId) {
+                    continue;
+                }
+                if (!Collision.areColliding(body1, body2)) {
+                    continue;
+                }
+                if (body1.type === Body.Type.Polygon){
+                    if (body2.type === Body.Type.Polygon) {
+                        let mtv = Collision.calculateSAT(body1, body2);
+                        if (mtv !== false) {
+                            body1.pos = body1.pos.add(mtv.normal.scale(mtv.length / 2))
+                            body2.pos = body2.pos.add(mtv.normal.scale(-mtv.length / 2))
+                            body1.v = new Vec2.create(0, 0)
+                            body2.v = new Vec2.create(0, 0)
+                        }
+                    }
+                    else {
+                        // todo
+                    }
+                }
+                else {
+                    // todo
+                }
+            }
+        }
+    }
+
     Engine.impulseSolver = function () {
         for (let body1 of this.gameObjects) {
             for (let body2 of this.gameObjects) {
@@ -88,7 +95,7 @@ module.exports = Engine;
                 if (!Collision.areColliding(body1, body2)) {
                     continue;
                 }
-                if (body1.type === 'circle' && body1.type === 'circle') { //TODO add more cases
+                if (body1.type === Body.Type.Circle && body1.type === Body.Type.Circle) { //TODO add more cases
                     continue;
                 }
                 let mtv = Collision.calculateSAT(body1, body2);

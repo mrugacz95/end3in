@@ -1,4 +1,4 @@
-Vec2 = {};
+Vec2 = {}; // todo change to const
 
 module.exports = Vec2;
 
@@ -68,5 +68,9 @@ module.exports = Vec2;
 
     Vec2.pseudoCross = function (value) {
         return Vec2.create(-value * this.x, value * this.y)
+    }
+
+    Vec2.inv = function (){
+        return this.scale(-1)
     }
 }());

@@ -1,13 +1,22 @@
 require('./Vector');
 const Vec2 = require("./Vector");
+const Utils = require("./Utlis");
 
 const Body = {};
+
+
 
 module.exports = Body;
 
 (function () {
 
+    const Type = {
+        Polygon: 'polygon',
+        Circle: 'circle'
+    }
+
     Body.rect = function (width, height, x, y, options = {}) {
+        this.Type = Type
         this.pos = Vec2.create(x, y);
         this.rot = options.rot || 0.0;
         this.points = [Vec2.create(-width / 2, -height / 2),
@@ -30,19 +39,11 @@ module.exports = Body;
         if (options.color) {
             this.color = options.color
         } else {
-            this.color = this.randomColor()
+            this.color = Utils.randomColor()
         }
         this.isStatic = options.isStatic || false;
+        this.type = Type.Polygon;
         return Object.assign({}, this)
-    };
-
-    Body.randomColor = function () {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
     };
 
     Body.polygon = function (vertices, x, y, options = {}) {
@@ -77,10 +78,10 @@ module.exports = Body;
         if (options.color) {
             this.color = options.color
         } else {
-            this.color = this.randomColor()
+            this.color = Utils.randomColor()
         }
         this.isStatic = options.isStatic || false;
-        this.type = 'polygon';
+        this.type = Type.Polygon;
         return Object.assign({}, this)
     };
 
@@ -113,49 +114,12 @@ module.exports = Body;
         if (options.color) {
             this.color = options.color
         } else {
-            this.color = this.randomColor()
+            this.color = Utils.randomColor()
         }
         this.isStatic = options.isStatic || false;
-        this.type = 'circle';
+        this.type = Type.Circle;
         this.radius = radius;
         return Object.assign({}, this)
-    };
-
-    Body.draw = function (ctx, debug) {
-        if (this.type === 'polygon') {
-            ctx.beginPath();
-            for (let i = 0; i < this.points.length + 1; i++) {
-                let next = this.points[i % this.points.length]
-                    .rotate(this.rot)
-                    .transpose(this.pos.x, this.pos.y);
-                if (i === 0) {
-                    ctx.moveTo(next.x, next.y);
-                } else {
-                    ctx.lineTo(next.x, next.y)
-                }
-            }
-            ctx.fillStyle = this.color;
-            ctx.fill();
-            if (debug) {
-                for (axis of this.axes()) {
-                    let mid = axis.p1.add(axis.p2).scale(0.5).rotate(this.rot).add(this.pos);
-                    let norm = axis.axis.rotate(this.rot).normal();
-                    ctx.lineWidth = 1 / engine.scale;
-                    ctx.strokeStyle = "#7a7a7a";
-                    ctx.beginPath();
-                    ctx.moveTo(mid.x, mid.y);
-                    ctx.lineTo(mid.x + norm.x, mid.y + norm.y);
-                    ctx.stroke()
-                }
-
-            }
-        } else if (this.type === 'circle') {
-            ctx.lineWidth = 1 / engine.scale;
-            ctx.beginPath();
-            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
-            ctx.stroke();
-        }
-
     };
 
     Body.update = function (dt) {
@@ -192,9 +156,9 @@ module.exports = Body;
     Body.axes = function () {
         let result = [];
         for (let i = 0; i < this.points.length; i++) {
-            let first = this.points[i].copy();
-            let second = this.points[(i + 1) % this.points.length].copy();
-            result.push({"axis": first.copy().sub(second), "p1": first, "p2": second})
+            let first = this.points[i];
+            let second = this.points[(i + 1) % this.points.length];
+            result.push({"axis": first.sub(second), "p1": first, "p2": second})
         }
         return result;
     };
