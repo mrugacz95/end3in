@@ -1,4 +1,3 @@
-require('./Vector');
 require('./Collision');
 require('./Solver');
 
@@ -57,11 +56,10 @@ module.exports = Engine;
     };
 
     Engine.translationSolver = function (){
-        for (let body1 of this.gameObjects) {
-            for (let body2 of this.gameObjects) {
-                if (body2.bodyId >= body1.bodyId) {
-                    continue;
-                }
+        for (let i = 0 ; i < engine.gameObjects.length; i++) {
+            for (let j = i + 1 ; j < engine.gameObjects.length; j++) {
+                const body1 = engine.gameObjects[i]
+                const body2 = engine.gameObjects[j]
                 if (!Collision.areColliding(body1, body2)) {
                     continue;
                 }
@@ -69,10 +67,8 @@ module.exports = Engine;
                     if (body2.type === Body.Type.Polygon) {
                         let mtv = Collision.calculateSAT(body1, body2);
                         if (mtv !== false) {
-                            body1.pos = body1.pos.add(mtv.normal.scale(mtv.length / 2))
-                            body2.pos = body2.pos.add(mtv.normal.scale(-mtv.length / 2))
-                            body1.v = new Vec2.create(0, 0)
-                            body2.v = new Vec2.create(0, 0)
+                            body1.pos = body1.pos.add(mtv.normal.normalize().scale(-mtv.length / 2))
+                            body2.pos = body2.pos.add(mtv.normal.normalize().scale(mtv.length / 2))
                         }
                     }
                     else {

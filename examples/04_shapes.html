@@ -10,21 +10,22 @@
     const Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision,
-        Graphics = end3in.Graphics;
+        Graphics = end3in.Graphics,
+        Vec2 = end3in.Vector;
 
     let engine = Engine.create(debug = true, solver = "none");
-    const triangle = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
+    const triangle = Body.polygon([ [0, 0.6], [1, -0.255],[-1, -0.255]], 1, 2, {
         'isStatic': true,
         'color': "#141ae6EE",
         "rot": 0
     }); // Math.PI / 4
-    const polygon1 = Body.polygon([[-0.25, 0], [0, -0.5], [0.69, -0.76], [1.2, 0.8]],
+    const polygon1 = Body.polygon([ [1.2, 0.8],[0.69, -0.76], [0, -0.5],[-0.25, 0] ],
         0.8, 4.2, {
             'isStatic': true,
             'color': "#141ae6EE",
             "rot": Math.PI / 6
         });
-    const polygon2 = Body.polygon([[0.62, -0.40], [0.65, 0.25], [0.44, 0.37], [-0.4, -0.20]],
+    const polygon2 = Body.polygon([[-0.4, -0.20], [0.44, 0.37], [0.65, 0.25],[0.62, -0.40] ],
         3.3, 2.0, {
             'isStatic': true,
             'color': "#141ae6EE",
@@ -38,7 +39,6 @@
 
 
     let graphics = Graphics.create(1000, 1000, engine, true)
-    graphics.start()
 
     engine.addBody(triangle);
     engine.addBody(polygon1);
@@ -56,6 +56,8 @@
         }
     });
     document.onmousemove = function (event) {
+        graphics.clear()
+        graphics.drawBodies()
         triangle.pos = graphics.clientToWorldPos(Vec2.create(event.clientX, event.clientY))
         triangle.color = "#141ae6EE";
 

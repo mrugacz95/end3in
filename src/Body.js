@@ -1,4 +1,3 @@
-require('./Vector');
 const Vec2 = require("./Vector");
 const Utils = require("./Utlis");
 
@@ -19,10 +18,10 @@ module.exports = Body;
         this.Type = Type
         this.pos = Vec2.create(x, y);
         this.rot = options.rot || 0.0;
-        this.points = [Vec2.create(-width / 2, -height / 2),
-            Vec2.create(width / 2, -height / 2),
+        this.points = [Vec2.create(-width / 2, height / 2),
             Vec2.create(width / 2, height / 2),
-            Vec2.create(-width / 2, height / 2)];
+            Vec2.create(width / 2, -height / 2),
+            Vec2.create(-width / 2, -height / 2)];
         this.width = width;
         this.height = height;
         this.v = Vec2.create(0, 0);
@@ -158,7 +157,7 @@ module.exports = Body;
         for (let i = 0; i < this.points.length; i++) {
             let first = this.points[i];
             let second = this.points[(i + 1) % this.points.length];
-            result.push({"axis": first.sub(second), "p1": first, "p2": second})
+            result.push({"axis": second.sub(first), "p1": first, "p2": second})
         }
         return result;
     };

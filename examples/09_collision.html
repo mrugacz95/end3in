@@ -5,14 +5,14 @@
     <title>Shapes</title>
     <script src="../build/end3in.js"></script>
 </head>
-<body style="margin: 0;">
-
-<canvas height="1000px" id="canvas" width="1000px"></canvas>
+<body style="margin: 0;"></body>
 <script>
     const Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision,
-        Graphics = end3in.Graphics;
+        Graphics = end3in.Graphics,
+        Vec2 = end3in.Vector;
+
     let engine = Engine.create();
     const rect1 = Body.rect(0.5, 0.5,
         1, 6, {
@@ -44,7 +44,7 @@
     // engine.g = 0;
     engine.start();
 
-    const graphics = Graphics.create(1000, 1000, engine)
+    const graphics = Graphics.create(700, 700, engine)
     graphics.start()
 
 
@@ -68,6 +68,4 @@
     }
 
 </script>
-
-</body>
 </html>

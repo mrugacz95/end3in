@@ -11,7 +11,8 @@
     const Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision,
-        Graphics = end3in.Graphics;
+        Graphics = end3in.Graphics,
+        Vec2 = end3in.Vector;
     const engine = Engine.create();
     engine.scale = 100;
     const rect1 = Body.rect(0.5, 0.5, 1, 2, {'isStatic': true, 'color': "#141ae6EE", "rot": 0.1});
@@ -32,6 +33,15 @@
             rect1.color = "#141ae6EE";
         }
     }
+
+    document.addEventListener("keydown", event => {
+        if (event.isComposing || event.code === 'Space') {
+            const mtv = Collision.calculateSAT(rect1, rect2, {'debug': true, 'context': graphics.ctx})
+            console.log(rect1.pos.x, rect1.pos.y)
+            console.log(mtv.normal.x, mtv.normal.y)
+            console.log(mtv.length)
+        }
+    });
 
 </script>
 </html>

@@ -10,7 +10,9 @@
     const Engine = end3in.Engine,
         Body = end3in.Body,
         Collision = end3in.Collision,
-        Graphics = end3in.Graphics;
+        Graphics = end3in.Graphics,
+        Vec2 = end3in.Vector;
+
     let engine = Engine.create(false, 'translation');
     for (let i = 0 ; i < 20; i++){
         let options = {rot: Math.PI / 4}
@@ -40,7 +42,5 @@
             obj.pos = obj.pos.add(Vec2.create(0.1, 0))
         }
     });
-
-
 </script>
 </html>

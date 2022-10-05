@@ -1,4 +1,4 @@
-require('./Vector');
+const Vec2 = require("./Vector");
 
 const Collision = {};
 
@@ -47,13 +47,13 @@ module.exports = Collision;
         let debug = options.debug || false;
 
         function projectPoint(axis, point, body) {
-            return point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).cross(axis);
+            return point.rotate(body.rot).transpose(body.pos.x, body.pos.y).dot(axis);
         }
 
         function projectBody(axis, body) {
             let min = Number.MAX_VALUE;
-            let minPoint;
             let max = -Number.MAX_VALUE;
+            let minPoint;
             let maxPoint;
             for (let point of body.points) {
                 let projection = projectPoint(axis, point, body);
@@ -74,9 +74,9 @@ module.exports = Collision;
             context.lineWidth = 1;
             normal = normal.normal();
             context.beginPath();
-            let axisStart = normal.scale(-10 * graphics.scale);
+            let axisStart = normal.scale(-10 * graphics.scale).add(graphics.cameraPos.scale(graphics.scale));
             context.moveTo(axisStart.x, axisStart.y);
-            let axisEnd = normal.scale(10 * graphics.scale);
+            let axisEnd = normal.scale(10 * graphics.scale).add(graphics.cameraPos.scale(graphics.scale));
             context.lineTo(axisEnd.x, axisEnd.y);
             context.stroke();
         }
@@ -86,9 +86,9 @@ module.exports = Collision;
             context.lineWidth = width;
             normal = normal.normal();
             context.beginPath();
-            let axisStart = normal.scale(proj.max * -graphics.scale);
+            let axisStart = normal.scale(proj.max * -graphics.scale).add(graphics.cameraPos.scale(graphics.scale));
             context.moveTo(axisStart.x, axisStart.y);
-            let axisEnd = normal.copy().scale(proj.min * -graphics.scale);
+            let axisEnd = normal.copy().scale(proj.min * -graphics.scale).add(graphics.cameraPos.scale(graphics.scale));
             context.lineTo(axisEnd.x, axisEnd.y);
             context.stroke();
         }
@@ -107,7 +107,7 @@ module.exports = Collision;
             for (let axisWithPoints of body.axes()) {
                 let axis = axisWithPoints.axis;
 
-                let normal = axis.rotate(body.rot).normalize();
+                let normal = axis.rotate(body.rot).normal().normalize();
                 let bProj = projectBody(normal, body);
                 let oProj = projectBody(normal, other);
                 if (debug) {
@@ -122,11 +122,11 @@ module.exports = Collision;
                 }
                 let overlap = 0;
 
-                if (bProj.min < oProj.min) {
-                    overlap = bProj.max - oProj.min;
-                } else {
-                    overlap = oProj.max - bProj.min;
-                }
+                overlap = Math.min(
+                    bProj.max - oProj.min,
+                    oProj.max - bProj.min
+                )
+
                 if (overlap < mtvLength) {
                     mtvLength = overlap;
                     mtvAxis = normal;
@@ -139,8 +139,10 @@ module.exports = Collision;
 
                 }
             }
+            if (mtvAxis != null) {
+                break
+            }
         }
-
         let penetratingPointInWorld = incP2
             .rotate(incidentBody.rot)
             .transpose(incidentBody.pos.x, incidentBody.pos.y);
@@ -157,6 +159,10 @@ module.exports = Collision;
             .transpose(-referenceBody.pos.x, -referenceBody.pos.y);
         penetratingPoint = penetratingPoint
             .rotate(incidentBody.rot);
+
+        if (incidentBody.pos.sub(referenceBody.pos).dot(mtvAxis) < 0) {
+            mtvAxis = mtvAxis.inv()
+        }
 
         return {
             'normal': mtvAxis,

@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Shapes</title>
+    <title>Circles</title>
     <script src="../build/end3in.js"></script>
 </head>
 <body></body>
 <script>
-    const Engine = end3in.Engine,
-        Body = end3in.Body,
+    const Body = end3in.Body,
+        Engine = end3in.Engine,
         Collision = end3in.Collision,
-        Graphics = end3in.Graphics;
+        Graphics = end3in.Graphics,
+        Vec2 = end3in.Vector;
+
     let engine = Engine.create();
     engine.g = 0;
 
@@ -21,7 +23,6 @@
     }
     engine.addAllBodies(gameObjects);
     engine.start();
-
 
     const graphics = Graphics.create(1000, 1000, engine)
     graphics.start()

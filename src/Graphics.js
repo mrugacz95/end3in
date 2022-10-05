@@ -1,5 +1,6 @@
 const Vec2 = require("./Vector");
 const Body = require("./Body");
+
 const Graphics = {}
 
 module.exports = Graphics;
