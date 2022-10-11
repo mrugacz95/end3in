@@ -25,6 +25,7 @@
 
     document.onmousemove = function (event) {
         graphics.clear()
+        engine.update()
         graphics.drawBodies(engine.gameObjects)
         rect1.pos = graphics.clientToWorldPos(Vec2.create(event.clientX, event.clientY));
         if (Collision.calculateSAT(rect1, rect2, {'debug': true, 'context': graphics.ctx})) {

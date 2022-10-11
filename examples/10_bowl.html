@@ -13,7 +13,7 @@
         Graphics = end3in.Graphics,
         Vec2 = end3in.Vector;
 
-    let engine = Engine.create();
+    let engine = Engine.create(debug = false, solver = "translation");
 
     const bowlB = Body.rect(4.3, 1.6,
         2, 5.0, {

@@ -14,32 +14,42 @@
         Vec2 = end3in.Vector;
 
     let engine = Engine.create(false, 'translation');
-    for (let i = 0 ; i < 20; i++){
-        let options = {rot: Math.PI / 4}
-        options = {}
+
+    const obj = Body.polygon([[-0.5, 1.0], [2.0, 1.0], [0.5, 0.0]], 0, 0)
+    engine.addBody(obj)
+
+    for (let i = 0; i < 10; i++) {
+        const isStatic = Math.random() >= 0.5
+        let options = {
+            isStatic: false
+        }
+        if (isStatic) {
+            options["color"] = "#000"
+        }
         engine.addBody(Body.rect(0.5, 0.5, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, options));
+        engine.addBody(Body.polygon([[0.0, 0.0], [0.5, 0.0], [0.3, -0.8]], (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5));
     }
-    engine.g = 0;
+    engine.addBody(Body.rect(7,1, -0, 4, {isStatic: true}));
+
+    engine.g = -1;
     engine.start();
 
-    const obj = engine.gameObjects[0]
-    obj.rot = Math.PI / 8
 
-    const graphics = Graphics.create(1000, 1000, engine)
+    const graphics = Graphics.create(1500, 1500, engine, {debug: true}, scale = 60, cameraPos = Vec2.create(6,6))
     graphics.start()
 
     document.addEventListener("keydown", event => {
         if (event.isComposing || event.code === 'ArrowUp') {
-            obj.pos = obj.pos.add(Vec2.create(0, -0.1))
+            obj.applyImpulse(Vec2.create(0, 50))
         }
         if (event.isComposing || event.code === 'ArrowDown') {
-            obj.pos = obj.pos.add(Vec2.create(0, 0.1))
+            obj.applyImpulse(Vec2.create(0, -50))
         }
         if (event.isComposing || event.code === 'ArrowLeft') {
-            obj.pos = obj.pos.add(Vec2.create(-0.1, 0))
+            obj.applyImpulse(Vec2.create(50, 0))
         }
         if (event.isComposing || event.code === 'ArrowRight') {
-            obj.pos = obj.pos.add(Vec2.create(0.1, 0))
+            obj.applyImpulse(Vec2.create(-50,0 ))
         }
     });
 </script>

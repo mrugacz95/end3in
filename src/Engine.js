@@ -55,39 +55,65 @@ module.exports = Engine;
         }
     };
 
-    Engine.translationSolver = function (){
-        for (let i = 0 ; i < engine.gameObjects.length; i++) {
-            for (let j = i + 1 ; j < engine.gameObjects.length; j++) {
+    Engine.translationSolver = function () {
+        for (let i = 0; i < engine.gameObjects.length; i++) {
+            for (let j = i + 1; j < engine.gameObjects.length; j++) {
                 const body1 = engine.gameObjects[i]
                 const body2 = engine.gameObjects[j]
+                if (body1.isStatic && body2.isStatic){
+                    continue
+                }
                 if (!Collision.areColliding(body1, body2)) {
                     continue;
                 }
-                if (body1.type === Body.Type.Polygon){
+                if (body1.type === Body.Type.Polygon) {
                     if (body2.type === Body.Type.Polygon) {
                         let mtv = Collision.calculateSAT(body1, body2);
                         if (mtv !== false) {
-                            body1.pos = body1.pos.add(mtv.normal.normalize().scale(-mtv.length / 2))
-                            body2.pos = body2.pos.add(mtv.normal.normalize().scale(mtv.length / 2))
+                            if (body2.isStatic) {
+                                body1.pos = body1.pos.add(mtv.normal.normalize().scale(-mtv.length))
+                            } else if (body1.isStatic) {
+                                body2.pos = body2.pos.add(mtv.normal.normalize().scale(mtv.length))
+                            } else {
+                                body2.pos = body2.pos.add(mtv.normal.normalize().scale(mtv.length / 2))
+                                body1.pos = body1.pos.add(mtv.normal.normalize().scale(-mtv.length / 2))
+                            }
+
+                            this.resolveCollision(body1, body2, mtv.normal)
                         }
-                    }
-                    else {
+                    } else {
                         // todo
                     }
-                }
-                else {
+                } else {
                     // todo
                 }
             }
         }
     }
 
+    Engine.resolveCollision = function (body1, body2, normal){
+        const relativeVelocity = body2.v.sub(body1.v);
+
+        if (relativeVelocity.dot(normal) > 0) {
+            return;
+        }
+
+        const e = Math.min(body1.restitution, body2.restitution);
+
+        let j = -(1 + e) *  relativeVelocity.dot(normal)
+        j /= body1.mInv + body2.mInv;
+
+        const impulse = normal.scale(j);
+
+        body1.v = body1.v.sub(impulse.scale(body1.mInv));
+        body2.v = body2.v.add(impulse.scale(body2.mInv));
+    }
+
     Engine.impulseSolver = function () {
-        for (let body1 of this.gameObjects) {
-            for (let body2 of this.gameObjects) {
-                if (body2.bodyId >= body1.bodyId) {
-                    continue;
-                }
+        for (let i = 0; i < this.gameObjects.length; i++) {
+            for (let j = i + 1; j < this.gameObjects.length; j++) {
+                let body1 = this.gameObjects[i]
+                let body2 = this.gameObjects[j]
                 if (!Collision.areColliding(body1, body2)) {
                     continue;
                 }
@@ -121,7 +147,6 @@ module.exports = Engine;
                     k += mtv.penetratingBody.IInv * (rn1 * rn1);
                     k += mtv.referenceBody.IInv * (rn2 * rn2);
 
-
                     let slop = 0.02;
                     let bias = 0.2 / this.dt * Math.max(mtv.length - slop, 0);
                     let P = (relativeVelocity + sign * bias) / k;
@@ -130,10 +155,8 @@ module.exports = Engine;
 
                     let refVector = P.scale(sign);
                     let indVector = P.scale(-1 * sign);
-                    incident.applyImpulse(indVector,
-                        mtv.penetratingPoint);
-                    reference.applyImpulse(refVector,
-                        mtv.referencePoint);
+                    incident.applyImpulse(indVector);
+                    reference.applyImpulse(refVector);
                 }
             }
         }

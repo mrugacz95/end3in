@@ -84,9 +84,9 @@ module.exports = Graphics;
             ctx.fillStyle = body.color;
             ctx.fill();
             if (debug) {
-                for (let axis of body.axes()) {
-                    let mid = axis.p1.add(axis.p2).scale(0.5).rotate(body.rot).add(body.pos);
-                    let norm = axis.axis.rotate(body.rot).normal();
+                for (let axis of body.transformedAxes()) {
+                    let mid = axis.axis.scale(0.5).add(axis.p1);
+                    let norm = axis.axis.normal();
                     ctx.lineWidth = 1 / this.scale;
                     ctx.strokeStyle = "#7a7a7a";
                     ctx.beginPath();

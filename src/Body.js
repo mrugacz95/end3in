@@ -35,6 +35,7 @@ module.exports = Body;
             this.mInv = 1.0 / this.m;
             this.IInv = 12.0 / (this.m * (this.width * this.width + this.height + this.height));
         }
+        this.restitution = 0.6
         if (options.color) {
             this.color = options.color
         } else {
@@ -42,10 +43,13 @@ module.exports = Body;
         }
         this.isStatic = options.isStatic || false;
         this.type = Type.Polygon;
+        this.transformUpdateRequired = true;
+        this.transformedPoints = []
         return Object.assign({}, this)
     };
 
     Body.polygon = function (vertices, x, y, options = {}) {
+        this.Type = Type
         this.pos = Vec2.create(x, y);
         this.rot = options.rot || 0.0;
         this.points = [];
@@ -74,6 +78,7 @@ module.exports = Body;
             const maxR = (Math.max.apply(Math, this.points.map((v) => (v.sqrtMagnitude()))));
             this.IInv = 2 / (this.m * maxR * maxR);
         }
+        this.restitution = 0.1
         if (options.color) {
             this.color = options.color
         } else {
@@ -81,12 +86,14 @@ module.exports = Body;
         }
         this.isStatic = options.isStatic || false;
         this.type = Type.Polygon;
+        this.transformUpdateRequired = true;
+        this.transformedPoints = []
         return Object.assign({}, this)
     };
 
     Body.regularPolygon = function (num_of_vertices, radius, x, y, options = {}) {
         let positions = [];
-        for (let i = 0; i < num_of_vertices; i++) {
+        for (let i = num_of_vertices - 1; i >= 0; i--) {
             let pos_x = Math.cos(2.0 * Math.PI / num_of_vertices * i) * radius;
             let pos_y = Math.sin(2.0 * Math.PI / num_of_vertices * i) * radius;
             positions.push([pos_x, pos_y])
@@ -95,6 +102,7 @@ module.exports = Body;
     };
 
     Body.circle = function (x, y, radius, options = {}) {
+        this.Type = Type
         this.pos = Vec2.create(x, y);
         this.rot = 0.0;
         this.v = Vec2.create(0, 0);
@@ -118,13 +126,17 @@ module.exports = Body;
         this.isStatic = options.isStatic || false;
         this.type = Type.Circle;
         this.radius = radius;
+        this.restitution = 0.2
+        this.transformUpdateRequired = true;
+        this.transformedPoints = []
         return Object.assign({}, this)
     };
 
     Body.update = function (dt) {
         this.pos.x += this.v.x * dt;
         this.pos.y += this.v.y * dt;
-        this.rot += this.omega * dt;
+        // this.rot += this.omega * dt;
+        this.transformUpdateRequired = true;
     };
 
     Body.applyForce = function (fx, fy, px, py, dt) {
@@ -143,31 +155,39 @@ module.exports = Body;
         this.omega += alpha * dt;
     };
 
-    Body.applyImpulse = function (P, r) {
+    Body.applyImpulse = function (P) {
         if (this.isStatic) {
             return
         }
         this.v.x -= P.x * this.mInv;
         this.v.y -= P.y * this.mInv;
-        this.omega -= this.IInv * r.cross(P);
+        // this.omega -= this.IInv * r.cross(P);
     };
 
-    Body.axes = function () {
+    Body.getTransformedPoints = function () {
+        if (this.transformUpdateRequired === false){
+            return this.transformedPoints
+        }
+        for (let i = 0; i < this.points.length; i++){
+            this.transformedPoints[i] = this.points[i].rotate(this.rot).add(this.pos)
+        }
+        this.transformUpdateRequired = false;
+        return this.transformedPoints;
+    };
+
+    Body.transformedAxes = function () {
         let result = [];
-        for (let i = 0; i < this.points.length; i++) {
-            let first = this.points[i];
-            let second = this.points[(i + 1) % this.points.length];
-            result.push({"axis": second.sub(first), "p1": first, "p2": second})
+        for (let i = 0; i < this.getTransformedPoints().length; i++) {
+            let first = this.getTransformedPoints()[i];
+            let second = this.getTransformedPoints()[(i + 1) % this.getTransformedPoints().length];
+            result.push({axis: second.sub(first), p1: first, p2: second})
         }
         return result;
     };
 
     Body.isInside = function (point) {
-        for (let a of this.axes()) {
-            let p1 = a.p1.rotate(this.rot).transpose(this.pos.x, this.pos.y);
-            let p2 = a.p2.rotate(this.rot).transpose(this.pos.x, this.pos.y);
-            let s = p1.sub(p2);
-            let d = s.cross(point.sub(p2));
+        for (let a of this.transformedAxes()) {
+            let d = a.axis.cross(a.p2.sub(point));
             if (d > 0) return false;
         }
         return true;
