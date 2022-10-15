@@ -1,34 +1,30 @@
-require('./Collision');
+import {Type} from "./Body";
+
+const { Collision } = require('./Collision');
 require('./Solver');
 
-const Engine = {};
-
-module.exports = Engine;
-
-(function () {
-
-    Engine.create = function (debug = false, solver = 'impulse') {
+export class Engine {
+    constructor(debug = false, solver = 'impulse') {
         this.solver = solver;
         this.dt = 1 / 60; // take dt from elapsed time
         this.debug = debug;
-        this.g = -9.81;
+        this.g = 9.81;
         this.gameObjects = [];
         this.newBodyId = 0;
         this.joints = [];
-        return Object.assign({}, this)
     };
 
-    Engine.start = function () {
+    start() {
         let self = this;
         window.setInterval(function () {
             self.update.call(self)
         }, 1000 * self.dt);
     };
 
-    Engine.update = function () {
+    update() {
         for (let obj of this.gameObjects) {
-            if (obj.mInv !== 0) {
-                obj.applyAcceleration(0, this.g, 0, engine.dt);
+            if (obj.isStatic !== true) {
+                obj.applyAcceleration(new Vec2(0, this.g), 0, engine.dt);
             }
         }
         if (this.solver === 'impulse') {
@@ -43,31 +39,31 @@ module.exports = Engine;
         }
     };
 
-    Engine.addBody = function (body) {
+    addBody(body) {
         body.bodyId = this.newBodyId;
         this.newBodyId += 1;
         this.gameObjects.push(body);
     };
 
-    Engine.addAllBodies = function (bodies) {
+    addAllBodies(bodies) {
         for (let body of bodies) {
             this.addBody(body)
         }
     };
 
-    Engine.translationSolver = function () {
+    translationSolver() {
         for (let i = 0; i < engine.gameObjects.length; i++) {
             for (let j = i + 1; j < engine.gameObjects.length; j++) {
                 const body1 = engine.gameObjects[i]
                 const body2 = engine.gameObjects[j]
-                if (body1.isStatic && body2.isStatic){
+                if (body1.isStatic && body2.isStatic) {
                     continue
                 }
                 if (!Collision.areColliding(body1, body2)) {
                     continue;
                 }
-                if (body1.type === Body.Type.Polygon) {
-                    if (body2.type === Body.Type.Polygon) {
+                if (body1.type === Type.Polygon) {
+                    if (body2.type === Type.Polygon) {
                         let mtv = Collision.calculateSAT(body1, body2);
                         if (mtv !== false) {
                             if (body2.isStatic) {
@@ -91,7 +87,7 @@ module.exports = Engine;
         }
     }
 
-    Engine.resolveCollision = function (body1, body2, normal){
+    resolveCollision(body1, body2, normal) {
         const relativeVelocity = body2.v.sub(body1.v);
 
         if (relativeVelocity.dot(normal) > 0) {
@@ -100,16 +96,16 @@ module.exports = Engine;
 
         const e = Math.min(body1.restitution, body2.restitution);
 
-        let j = -(1 + e) *  relativeVelocity.dot(normal)
-        j /= body1.mInv + body2.mInv;
+        let j = -(1 + e) * relativeVelocity.dot(normal)
+        j /= body1.massInv + body2.massInv;
 
         const impulse = normal.scale(j);
 
-        body1.v = body1.v.sub(impulse.scale(body1.mInv));
-        body2.v = body2.v.add(impulse.scale(body2.mInv));
+        body1.v = body1.v.sub(impulse.scale(body1.massInv));
+        body2.v = body2.v.add(impulse.scale(body2.massInv));
     }
 
-    Engine.impulseSolver = function () {
+    impulseSolver() {
         for (let i = 0; i < this.gameObjects.length; i++) {
             for (let j = i + 1; j < this.gameObjects.length; j++) {
                 let body1 = this.gameObjects[i]
@@ -161,16 +157,18 @@ module.exports = Engine;
             }
         }
     };
-    Engine.addJoint = function (joint) {
+
+    addJoint(joint) {
         this.joints.push(joint)
     };
-    Engine.addAllJoints = function (joints) {
+
+    addAllJoints(joints) {
         for (let joint of joints) {
             this.addJoint(joint);
         }
     };
 
-    Engine.constraintSolver = function () {
+    constraintSolver() {
         for (let i = 0; i < 4; i++) {
             for (let c of this.joints) {
                 let J = [];
@@ -188,4 +186,4 @@ module.exports = Engine;
             }
         }
     };
-}());
+}

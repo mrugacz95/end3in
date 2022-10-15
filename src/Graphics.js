@@ -1,14 +1,10 @@
-const Vec2 = require("./Vector");
+const { Vec2 } = require("./Vector");
 const Body = require("./Body");
 
-const Graphics = {}
+export class Graphics {
+    started = false;
 
-module.exports = Graphics;
-
-(function () {
-    Graphics.started = false;
-
-    Graphics.create = function (width, height, engine, debug = false, scale  = 60, cameraPos = Vec2.create(3, 3), clickCallback = function () {
+    constructor(width, height, engine, debug = false, scale = 60, cameraPos = new Vec2(3, 3), clickCallback = function () {
     }) {
         this.engine = engine
         this.debug = debug
@@ -17,7 +13,7 @@ module.exports = Graphics;
         let self = this
         document.addEventListener("click",
             function (event) {
-                let worldPos = self.clientToWorldPos(Vec2.create(event.clientX, event.clientY))
+                let worldPos = self.clientToWorldPos(new Vec2(event.clientX, event.clientY))
                 clickCallback(worldPos)
             });
         this.ctx = this.canvas.getContext('2d');
@@ -28,15 +24,14 @@ module.exports = Graphics;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.dt = 1 / 60;
-        return Object.assign({}, this)
     }
 
-    Graphics.start = function () {
+    start() {
         this.started = true;
         this.setInterval()
     };
 
-    Graphics.setInterval = function () {
+    setInterval() {
         if (!this.started) {
             return
         }
@@ -47,11 +42,11 @@ module.exports = Graphics;
         }, 1000 * this.dt);
     }
 
-    Graphics.stop = function () {
+    stop() {
         this.started = false;
     }
 
-    Graphics.drawBodies = function (bodies = this.engine.gameObjects) {
+    drawBodies(bodies = this.engine.gameObjects) {
         this.clear()
         this.ctx.save();
         this.ctx.scale(this.scale, this.scale);
@@ -62,13 +57,13 @@ module.exports = Graphics;
         this.ctx.restore()
     }
 
-    Graphics.clear = function () {
+    clear() {
         this.ctx.fillStyle = "#FFFFFF";
         this.ctx.fillRect(0, 0, this.width, this.height);
         this.ctx.fillStyle = "#000000";
     };
 
-    Graphics.drawBody = function (ctx, body, debug) {
+    drawBody(ctx, body, debug) {
         if (body.type === Body.Type.Polygon) {
             ctx.beginPath();
             for (let i = 0; i < body.points.length + 1; i++) {
@@ -104,15 +99,15 @@ module.exports = Graphics;
         }
     }
 
-    Graphics.clientToWorldPos = function (clientPos) {
+    clientToWorldPos(clientPos) {
         const {top, left} = this.canvas.getBoundingClientRect()
-        return Vec2.create(clientPos.x, clientPos.y)
-            .sub(Vec2.create(top, left))
+        return new Vec2(clientPos.x, clientPos.y)
+            .sub(new Vec2(top, left))
             .scale(1 / this.scale)
             .sub(this.cameraPos);
     }
 
-    Graphics.worldToCanvasPosition = function (worldPos) {
+    worldToCanvasPosition(worldPos) {
         return worldPos.scale(this.scale)
     }
-})()
+}

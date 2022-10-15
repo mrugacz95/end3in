@@ -1,26 +1,22 @@
-const Body = require("./Body");
+const  { Type: Type } = require("./Body");
 
-const Collision = {};
-
-module.exports = Collision;
-
-(function () {
-    Collision.areColliding = function (body1, body2) {
+export class Collision{
+    static areColliding(body1, body2) {
         if (body1.type !== body2.type) {
             return false // TODO add more calculations
         }
-        if (body1.type === Body.Type.Polygon) {
+        if (body1.type === Type.Polygon) {
             let body1MinX = Number.MAX_VALUE, body1MaxX = -Number.MAX_VALUE,
                 body2MinX = Number.MAX_VALUE, body2MaxX = -Number.MAX_VALUE,
                 body1MinY = Number.MAX_VALUE, body1MaxY = -Number.MAX_VALUE,
                 body2MinY = Number.MAX_VALUE, body2MaxY = -Number.MAX_VALUE;
-            for (let p of body1.getTransformedPoints()) {
+            for (let p of body1.transformedPoints) {
                 body1MinX = Math.min(body1MinX, p.x)
                 body1MaxX = Math.max(body1MaxX, p.x);
                 body1MinY = Math.min(body1MinY, p.y);
                 body1MaxY = Math.max(body1MaxY, p.y);
             }
-            for (let p of body2.getTransformedPoints()) {
+            for (let p of body2.transformedPoints) {
                 body2MinX = Math.min(body2MinX, p.x);
                 body2MaxX = Math.max(body2MaxX, p.x);
                 body2MinY = Math.min(body2MinY, p.y);
@@ -35,8 +31,8 @@ module.exports = Collision;
         }
     };
 
-    Collision.calculateSAT = function (body1, body2, options = {}) {
-        if (body1.type === 'circle' || body2.type === 'circle') return null; // TODO add more calculations
+    static calculateSAT (body1, body2, options = {}) {
+        if (body1.type === Type.Circle || body2.type === Type.Circle) return null; // TODO add more calculations
         let context = !options.debug || options.context;
         let debug = options.debug || false;
 
@@ -49,7 +45,7 @@ module.exports = Collision;
             let max = -Number.MAX_VALUE;
             let minPoint;
             let maxPoint;
-            for (let point of body.getTransformedPoints()) {
+            for (let point of body.transformedPoints) {
                 let projection = projectPoint(axis, point);
                 if (min > projection) {
                     min = projection;
@@ -103,7 +99,7 @@ module.exports = Collision;
         let incidentBody;
         let referenceBody;
         for (let body of [body1, body2]) {
-            for (let axisWithPoints of body.transformedAxes()) {
+            for (let axisWithPoints of body.transformedAxes) {
                 let axis = axisWithPoints.axis;
 
                 let normal = axis.normalize().normal();
@@ -168,4 +164,4 @@ module.exports = Collision;
             'penetratingPoint': penetratingPoint
         };
     }
-}());
+}
