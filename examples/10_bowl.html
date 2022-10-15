@@ -5,33 +5,34 @@
     <title>Shapes</title>
     <script src="../build/end3in.js"></script>
 </head>
-<body style="margin: 0;">
-
-<canvas height="1000px" id="canvas" width="1000px"></canvas>
+<body></body>
 <script>
-    var Engine = end3in.Engine,
+    const Engine = end3in.Engine,
         Body = end3in.Body,
-        Collision = end3in.Collision;
-    let engine = Engine.create();
+        Collision = end3in.Collision,
+        Graphics = end3in.Graphics,
+        Vec2 = end3in.Vector;
 
-    var bowlB = Body.rect(4.3, 1.6,
+    let engine = Engine.create(debug = false, solver = "translation");
+
+    const bowlB = Body.rect(4.3, 1.6,
         2, 5.0, {
             'color': "rgba(255,210,120,1)",
             "isStatic": true
         });
-    var bowlL = Body.rect(3, 2,
+    const bowlL = Body.rect(3, 2,
         -0.5, 4, {
             'color': "rgba(255,210,120,1)",
             "isStatic": true,
             'rot': Math.PI / 4
         });
-    var bowlR = Body.rect(3, 2,
+    const bowlR = Body.rect(3, 2,
         4.5, 4, {
             'color': "rgba(255,210,120,1)",
             "isStatic": true,
             'rot': -Math.PI / 4
         });
-    var gameObjects = [];
+    const gameObjects = [];
     for (let i = 0; i < 6; i++) {
         let obj = Body.regularPolygon(8, 0.5, -0.5 + i, 2);
         gameObjects.push(obj)
@@ -43,6 +44,8 @@
     engine.addAllBodies(gameObjects);
     engine.start();
 
+    const graphics = Graphics.create(1000, 1000, engine)
+    graphics.start()
 
     function setup() {
         for (let i = 0; i < gameObjects.length; i++) {
@@ -54,11 +57,9 @@
 
     setup();
 
-    document.onmousedown = function (event) {
+    document.onmousedown = function () {
         setup()
     }
 
 </script>
-
-</body>
 </html>

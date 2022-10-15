@@ -1,4 +1,4 @@
-Vec2 = {};
+const Vec2 = {};
 
 module.exports = Vec2;
 
@@ -8,7 +8,6 @@ module.exports = Vec2;
         this.y = y;
         return Object.assign({}, this)
     };
-
 
     Vec2.transpose = function (x, y) {
         return Vec2.create(this.x + x, this.y + y)
@@ -46,16 +45,19 @@ module.exports = Vec2;
     };
 
     Vec2.dot = function (other) {
-        return this.x * other.x - this.y * other.y;
+        return this.x * other.x + this.y * other.y;
     };
 
     Vec2.cross = function (other) {
         return this.x * other.y - this.y * other.x;
     };
 
-
     Vec2.normal = function () {
         return Vec2.create(-this.y, this.x);
+    };
+
+    Vec2.rightNormal = function () {
+        return Vec2.create(this.y, -this.x);
     };
 
     Vec2.add = function (other) {
@@ -68,5 +70,13 @@ module.exports = Vec2;
 
     Vec2.pseudoCross = function (value) {
         return Vec2.create(-value * this.x, value * this.y)
+    }
+
+    Vec2.inv = function () {
+        return this.scale(-1)
+    }
+
+    Vec2.toArray = function () {
+        return [this.x, this.y]
     }
 }());

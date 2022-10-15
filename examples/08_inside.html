@@ -5,20 +5,20 @@
     <title>Shapes</title>
     <script src="../build/end3in.js"></script>
 </head>
-<body style="margin: 0;">
-
-<canvas height="1000px" id="canvas" width="1000px"></canvas>
+<body></body>
 <script>
-    var Engine = end3in.Engine,
+    const Engine = end3in.Engine,
         Body = end3in.Body,
-        Collision = end3in.Collision;
+        Collision = end3in.Collision,
+        Graphics = end3in.Graphics,
+        Vec2 = end3in.Vector;
     let engine = Engine.create();
-    var rect1 = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
+    const rect1 = Body.polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, {
         'isStatic': true,
         'color': "#141ae6EE",
         "rot": 0
     }); // Math.PI / 4
-    var polygon2 = Body.rect(2,2,
+    const polygon2 = Body.rect(2, 2,
         3.3, 2.0, {
             'isStatic': true,
             'color': "#141ae6EE",
@@ -26,20 +26,15 @@
         });
     engine.addBody(rect1);
     engine.addBody(polygon2);
-    var clear = engine.clear;
-    var draw = engine.draw;
-    engine.clear = function () {
-    };
-    engine.draw = function () {
-    };
     engine.start();
 
+    const graphics = Graphics.create(1000, 1000, engine)
+    graphics.start()
+
     document.onmousemove = function (event) {
-        clear.call(engine);
-        draw.call(engine);
-        let mouse = Vec2.create(event.clientX / engine.scale, event.clientY / engine.scale).sub(engine.cameraPos);
-        rect1.pos = mouse;
-        if (polygon2.isInside(mouse)) {
+        const mousePos = graphics.clientToWorldPos(Vec2.create(event.clientX, event.clientY));
+        rect1.pos = mousePos
+        if (polygon2.isInside(mousePos)) {
             polygon2.color = "#e62131EE";
         } else {
             polygon2.color = "#2736E6";
@@ -47,6 +42,4 @@
     }
 
 </script>
-
-</body>
 </html>

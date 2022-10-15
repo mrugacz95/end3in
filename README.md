@@ -1,6 +1,6 @@
 # endʒɪn
 
-Samples writen in JS for understanding physic engine mechanisms.
+Samples written in JS for understanding physic engine mechanisms.
 
 # Knowledge
 

@@ -1,59 +1,63 @@
-require('./Vector');
+const Body = require("./Body");
 
-var Collision = {};
+const Collision = {};
 
 module.exports = Collision;
 
 (function () {
     Collision.areColliding = function (body1, body2) {
-        if(body1.type !== body2.type){return false} // TODO add more calculations
-        if(body1.type === 'polygon') {
-            var b1X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-            var b1Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-            var b2X = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-            var b2Y = Vec2.create(Number.MAX_VALUE, Number.MIN_VALUE);
-            for (let point of body1.points) {
-                let p = point.copy().rotate(body1.rot).transpose(body1.pos.x, body1.pos.y);
-                b1X = Vec2.create(Math.min(b1X.x, p.x), Math.max(b1X.y, p.x));
-                b1Y = Vec2.create(Math.min(b1Y.x, p.y), Math.max(b1Y.y, p.y));
+        if (body1.type !== body2.type) {
+            return false // TODO add more calculations
+        }
+        if (body1.type === Body.Type.Polygon) {
+            let body1MinX = Number.MAX_VALUE, body1MaxX = -Number.MAX_VALUE,
+                body2MinX = Number.MAX_VALUE, body2MaxX = -Number.MAX_VALUE,
+                body1MinY = Number.MAX_VALUE, body1MaxY = -Number.MAX_VALUE,
+                body2MinY = Number.MAX_VALUE, body2MaxY = -Number.MAX_VALUE;
+            for (let p of body1.getTransformedPoints()) {
+                body1MinX = Math.min(body1MinX, p.x)
+                body1MaxX = Math.max(body1MaxX, p.x);
+                body1MinY = Math.min(body1MinY, p.y);
+                body1MaxY = Math.max(body1MaxY, p.y);
             }
-            for (let point of body2.points) {
-                let p = point.copy().rotate(body2.rot).transpose(body2.pos.x, body2.pos.y);
-                b2X = Vec2.create(Math.min(b2X.x, p.x), Math.max(b2X.y, p.x));
-                b2Y = Vec2.create(Math.min(b2Y.x, p.y), Math.max(b2Y.y, p.y));
+            for (let p of body2.getTransformedPoints()) {
+                body2MinX = Math.min(body2MinX, p.x);
+                body2MaxX = Math.max(body2MaxX, p.x);
+                body2MinY = Math.min(body2MinY, p.y);
+                body2MaxY = Math.max(body2MaxY, p.y);
             }
-            return b1X.x < b2X.y &&
-                b1X.y > b2X.x &&
-                b1Y.x < b2Y.y &&
-                b1Y.y > b2Y.x;
-        } else if (body1.type === 'circle'){
+            return body1MinX < body2MaxX &&
+                body1MaxX > body2MinX &&
+                body1MinY < body2MaxY &&
+                body1MaxY > body2MinY;
+        } else if (body1.type === 'circle') {
             return body1.pos.sub(body2.pos).sqrtMagnitude() < body1.radious + body2.radious;
         }
     };
 
     Collision.calculateSAT = function (body1, body2, options = {}) {
-        if(body1.type === 'circle' || body2.type === 'circle') return null; // TODO add more calculations
+        if (body1.type === 'circle' || body2.type === 'circle') return null; // TODO add more calculations
         let context = !options.debug || options.context;
         let debug = options.debug || false;
 
-        function projectPoint(axis, point, body) {
-            return point.copy().rotate(body.rot).transpose(body.pos.x, body.pos.y).cross(axis);
+        function projectPoint(axis, point) {
+            return point.dot(axis);
         }
 
         function projectBody(axis, body) {
             let min = Number.MAX_VALUE;
-            let minPoint;
             let max = -Number.MAX_VALUE;
+            let minPoint;
             let maxPoint;
-            for (let point of body.points) {
-                let projection = projectPoint(axis, point, body);
+            for (let point of body.getTransformedPoints()) {
+                let projection = projectPoint(axis, point);
                 if (min > projection) {
                     min = projection;
-                    minPoint = point.copy();
+                    minPoint = point;
                 }
                 if (max < projection) {
                     max = projection;
-                    maxPoint = point.copy();
+                    maxPoint = point;
                 }
             }
             return {"min": min, "max": max, "minPoint": minPoint, "maxPoint": maxPoint};
@@ -62,11 +66,11 @@ module.exports = Collision;
         function drawNormal(normal) {
             context.strokeStyle = "#000";
             context.lineWidth = 1;
-            normal = normal.copy().normal();
+            normal = normal.normal();
             context.beginPath();
-            let axisStart = normal.copy().scale(-10 * engine.scale);
+            let axisStart = normal.scale(-10 * graphics.scale).add(graphics.cameraPos.scale(graphics.scale));
             context.moveTo(axisStart.x, axisStart.y);
-            let axisEnd = normal.copy().scale(10 * engine.scale);
+            let axisEnd = normal.scale(10 * graphics.scale).add(graphics.cameraPos.scale(graphics.scale));
             context.lineTo(axisEnd.x, axisEnd.y);
             context.stroke();
         }
@@ -74,12 +78,19 @@ module.exports = Collision;
         function drawProjection(normal, body, proj, color, width) {
             context.strokeStyle = color;
             context.lineWidth = width;
-            normal = normal.copy().normal();
             context.beginPath();
-            let axisStart = normal.copy().scale(proj.max * -engine.scale);
+            let axisStart = normal.scale(proj.max * graphics.scale).add(graphics.cameraPos.scale(graphics.scale));
             context.moveTo(axisStart.x, axisStart.y);
-            let axisEnd = normal.copy().scale(proj.min * -engine.scale);
+            let axisEnd = normal.copy().scale(proj.min * graphics.scale).add(graphics.cameraPos.scale(graphics.scale));
             context.lineTo(axisEnd.x, axisEnd.y);
+            context.stroke();
+        }
+
+        function drawIncidentPoint(point1) {
+            context.strokeStyle = "#FFF000";
+            context.beginPath();
+            let point = graphics.worldToCanvasPosition(point1.add(graphics.cameraPos))
+            context.arc(point.x, point.y, 30, 0, 2 * Math.PI);
             context.stroke();
         }
 
@@ -91,19 +102,17 @@ module.exports = Collision;
         let incP2;
         let incidentBody;
         let referenceBody;
-        for (let bodies of [[body1, body2], [body2, body1]]) {
-            let body = bodies[0];
-            let other = bodies[1];
-            for (let axisWithPoints of body.axes()) {
+        for (let body of [body1, body2]) {
+            for (let axisWithPoints of body.transformedAxes()) {
                 let axis = axisWithPoints.axis;
 
-                let normal = axis.rotate(body.rot).normalize();
-                let bProj = projectBody(normal, body);
-                let oProj = projectBody(normal, other);
+                let normal = axis.normalize().normal();
+                let bProj = projectBody(normal, body1);
+                let oProj = projectBody(normal, body2);
                 if (debug) {
                     drawNormal(normal);
-                    drawProjection(normal, body, bProj, "#FF0000", 10);
-                    drawProjection(normal, other, oProj, "#00FF00", 8);
+                    drawProjection(normal, body1, body2, "#FF0000", 10);
+                    drawProjection(normal, body1, body2, "#00FF00", 8);
                 }
                 // check overlap
                 if (bProj.max <= oProj.min ||
@@ -112,27 +121,29 @@ module.exports = Collision;
                 }
                 let overlap = 0;
 
-                if (bProj.min < oProj.min) {
-                    overlap = bProj.max - oProj.min;
-                } else {
-                    overlap = oProj.max - bProj.min;
-                }
+                overlap = Math.min(
+                    bProj.max - oProj.min,
+                    oProj.max - bProj.min
+                )
+
                 if (overlap < mtvLength) {
                     mtvLength = overlap;
                     mtvAxis = normal;
-                    referenceBody = body;
-                    refP1 = axisWithPoints.p1.copy();
-                    refP2 = axisWithPoints.p2.copy();
-                    incidentBody = other;
-                    incP1 = oProj.minPoint.copy();
-                    incP2 = oProj.maxPoint.copy();
-
+                    referenceBody = body1;
+                    refP1 = axisWithPoints.p1;
+                    refP2 = axisWithPoints.p2;
+                    incidentBody = body2;
+                    incP1 = oProj.minPoint;
+                    incP2 = oProj.maxPoint;
                 }
             }
         }
+
+        if (referenceBody.pos.sub(incidentBody.pos).dot(mtvAxis) > 0) {
+            mtvAxis = mtvAxis.inv()
+        }
         let penetratingPointInWorld = incP2
-            .rotate(incidentBody.rot)
-            .transpose(incidentBody.pos.x, incidentBody.pos.y);
+
         let penetratingPoint;
         if (referenceBody.isInside(penetratingPointInWorld)) {
             penetratingPoint = incP2;
@@ -140,12 +151,11 @@ module.exports = Collision;
             penetratingPoint = incP1;
         }
         let edgePoint = penetratingPoint
-            .rotate(incidentBody.rot)
-            .transpose(incidentBody.pos.x, incidentBody.pos.y)
             .add(mtvAxis.normal().scale(mtvLength))
-            .transpose(-referenceBody.pos.x, -referenceBody.pos.y);
-        penetratingPoint = penetratingPoint
-            .rotate(incidentBody.rot);
+
+        if(debug) {
+            drawIncidentPoint(penetratingPoint)
+        }
 
         return {
             'normal': mtvAxis,

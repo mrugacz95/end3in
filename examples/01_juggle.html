@@ -5,25 +5,34 @@
     <title>Juggle</title>
     <script src="../build/end3in.js"></script>
 </head>
-<body style="margin: 0;">
-
-<canvas width="1000px" height="1000px" id="canvas"></canvas>
-
+<body>
+</body>
 <script>
-    var Engine = end3in.Engine,
-        Body = end3in.Body;
-    var engine = Engine.create();
-    var rect1 = Body.rect(0.5, 0.5, 3, 4);
+    const Engine = end3in.Engine,
+        Body = end3in.Body,
+        Graphics = end3in.Graphics,
+        Vec2 = end3in.Vector;
+    const engine = Engine.create();
+    const rect1 = Body.rect(0.5, 0.5, 3, 4);
     engine.addBody(rect1);
     engine.start();
 
-    function printMousePos(event) {
-        var click = Vec2.create(event.clientX, event.clientY).scale(1 / engine.scale);
-        var force = rect1.pos.copy().sub(click).normalize().scale(2);
-        rect1.applyForce(force.x, -force.y, click.x, click.y, 1);
+    function applyForce(worldPosition) {
+        const force = rect1.pos.sub(worldPosition).normalize().scale(1);
+        rect1.applyForce(force.x, -force.y, worldPosition.x, worldPosition.y, 1000);
     }
 
-    document.addEventListener("click", printMousePos);
+    const graphics = Graphics.create(1000, 1000, engine, true,  60, applyForce)
+    graphics.start()
+
+    function getDocumentOffsetPosition(el) {
+        let top = 0, left = 0;
+        while (el !== null) {
+            top += el.offsetTop;
+            left += el.offsetLeft;
+            el = el.offsetParent;
+        }
+        return {top, left};
+    }
 </script>
-</body>
 </html>

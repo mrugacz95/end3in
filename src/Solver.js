@@ -1,4 +1,4 @@
-var Solver = {};
+const Solver = {};
 
 module.exports = Solver;
 
@@ -42,9 +42,5 @@ module.exports = Solver;
             }
             return {'lower': lower, 'upper': upper};
         }
-
-
-    }
-    ()
-)
-;
+    }()
+);

@@ -5,20 +5,21 @@
     <title>Shapes</title>
     <script src="../build/end3in.js"></script>
 </head>
-<body style="margin: 0;">
-
-<canvas height="1000px" id="canvas" width="1000px"></canvas>
+<body style="margin: 0;"></body>
 <script>
-    var Engine = end3in.Engine,
+    const Engine = end3in.Engine,
         Body = end3in.Body,
-        Collision = end3in.Collision;
+        Collision = end3in.Collision,
+        Graphics = end3in.Graphics,
+        Vec2 = end3in.Vector;
+
     let engine = Engine.create();
-    var rect1 = Body.rect(0.5, 0.5,
+    const rect1 = Body.rect(0.5, 0.5,
         1, 6, {
-        'color': "rgba(230,23,74,0.93)",
-        "rot": Math.PI / 6
-    });
-    var rect2 = Body.rect(0.5, 0.5,
+            'color': "rgba(230,23,74,0.93)",
+            "rot": Math.PI / 6
+        });
+    const rect2 = Body.rect(0.5, 0.5,
         0, 6, {
             'color': "rgba(26,230,73,0.93)",
             "rot": Math.PI / 6
@@ -31,17 +32,20 @@
             'color': "rgba(230,182,46,0.93)",
             "rot": Math.PI / 7
         });
-    var ground = Body.rect(10, 2,
+    const ground = Body.rect(10, 2,
         0, 5.0, {
             'color': "rgba(0,0,0,0.93)",
             "isStatic": true
         });
-    engine.addBody(ground);
     engine.addBody(rect1);
     engine.addBody(rect2);
     engine.addBody(poly);
+    engine.addBody(ground);
     // engine.g = 0;
     engine.start();
+
+    const graphics = Graphics.create(700, 700, engine)
+    graphics.start()
 
 
     function setup() {
@@ -59,11 +63,9 @@
 
     setup();
 
-    document.onmousedown = function (event) {
+    document.onmousedown = function () {
         setup()
     }
 
 </script>
-
-</body>
 </html>

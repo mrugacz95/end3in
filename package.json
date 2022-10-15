@@ -4,7 +4,7 @@
   "description": "Simple physic engine ",
   "main": "build/end3in.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch"
   },
@@ -23,9 +23,9 @@
     "url": "https://github.com/mrugacz95/end3in/issues"
   },
   "homepage": "https://github.com/mrugacz95/end3in#readme",
-  "dependencies": {},
   "devDependencies": {
-    "webpack": "^4.41.1",
-    "webpack-cli": "^3.3.9"
+    "jest": "^29.1.2",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
   }
 }
