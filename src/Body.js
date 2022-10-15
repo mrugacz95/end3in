@@ -102,7 +102,7 @@ module.exports = Body;
     };
 
     Body.circle = function (x, y, radius, options = {}) {
-        this.Type = Type
+        this.Type = Type.Circle
         this.pos = Vec2.create(x, y);
         this.rot = 0.0;
         this.v = Vec2.create(0, 0);
