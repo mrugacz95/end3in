@@ -32,6 +32,7 @@ module.exports = Body;
             this.color = this.randomColor()
         }
         this.isStatic = options.isStatic || false;
+        this.type = 'polygon';
         return Object.assign({}, this)
     };
 
