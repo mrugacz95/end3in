@@ -79,7 +79,7 @@ export class Graphics {
             ctx.fillStyle = body.color;
             ctx.fill();
             if (debug) {
-                for (let axis of body.transformedAxes()) {
+                for (let axis of body.transformedAxes) {
                     let mid = axis.axis.scale(0.5).add(axis.p1);
                     let norm = axis.axis.normal();
                     ctx.lineWidth = 1 / this.scale;

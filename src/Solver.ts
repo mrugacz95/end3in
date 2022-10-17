@@ -1,5 +1,5 @@
 export class Solver {
-    solve(mat, b, iterations) {
+    static solve(mat: number[][], b: number[], iterations: number) {
         // Ax = b
         let x = [];
         for (let i = 0; i < mat.length; i++) {
@@ -19,13 +19,13 @@ export class Solver {
         return x;
     };
 
-    getUpper(mat) {
+    static getUpper(mat:number[][]) {
         let upper = [];
         let lower = [];
         for (let row = 0; row < mat.length; row++) {
             let newLowerRow = [];
             let newUpperRow = [];
-            for (let col = 0; col < max[row].length; col++) {
+            for (let col = 0; col < mat[row].length; col++) {
                 if (row >= col) {
                     newUpperRow.push(mat[row][col]);
                     newLowerRow.push(0)

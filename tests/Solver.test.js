@@ -1,4 +1,4 @@
-const Solver = require('../src/Solver')
+const  { Solver } = require('../src/Solver')
 
 function expectToBeCloseToArray(actual, expected) {
     expect(actual.length).toBe(expected.length)

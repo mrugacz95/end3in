@@ -9,25 +9,25 @@
 <body></body>
 <script>
     const Engine = end3in.Engine,
-        Body = end3in.Body,
+        Rectangle = end3in.Rectangle,
         Collision = end3in.Collision,
         Graphics = end3in.Graphics,
-        Vec2 = end3in.Vector;
-    const engine = Engine.create();
+        Vec2 = end3in.Vec2;
+    const engine = new Engine();
     engine.scale = 100;
-    const rect1 = Body.rect(0.5, 0.5, 1, 2, {'isStatic': true, 'color': "#141ae6EE", "rot": 0.1});
-    const rect2 = Body.rect(1.0, 1.5, 2, 2.5, {'isStatic': true, 'color': "#141ae6EE", "rot": Math.PI / 4});
+    const rect1 = new Rectangle(0.5, 0.5, 1, 2, 1, true, 0.1);
+    const rect2 = new Rectangle(1.0, 1.5, 2, 2.5,1, true,  Math.PI / 4);
     engine.addBody(rect1);
     engine.addBody(rect2);
     engine.start();
 
-    const graphics = Graphics.create(1000, 1000, engine, true, 60, Vec2.create(6,6))
+    const graphics = new Graphics(1000, 1000, engine, true, 60, new Vec2(6,6))
 
     document.onmousemove = function (event) {
         graphics.clear()
         engine.update()
         graphics.drawBodies(engine.gameObjects)
-        rect1.pos = graphics.clientToWorldPos(Vec2.create(event.clientX, event.clientY));
+        rect1.pos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY));
         if (Collision.calculateSAT(rect1, rect2, {'debug': true, 'context': graphics.ctx})) {
             rect1.color = "#e62131EE";
         } else {
@@ -38,9 +38,6 @@
     document.addEventListener("keydown", event => {
         if (event.isComposing || event.code === 'Space') {
             const mtv = Collision.calculateSAT(rect1, rect2, {'debug': true, 'context': graphics.ctx})
-            console.log(rect1.pos.x, rect1.pos.y)
-            console.log(mtv.normal.x, mtv.normal.y)
-            console.log(mtv.length)
         }
     });
 

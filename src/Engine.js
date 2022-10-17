@@ -1,10 +1,11 @@
 import {Type} from "./Body";
+import {Vec2} from "./Vector"
 
-const { Collision } = require('./Collision');
+const {Collision} = require('./Collision');
 require('./Solver');
 
 export class Engine {
-    constructor(debug = false, solver = 'impulse') {
+    constructor(debug = false, solver = 'impulse', iterations = 1) {
         this.solver = solver;
         this.dt = 1 / 60; // take dt from elapsed time
         this.debug = debug;
@@ -12,6 +13,7 @@ export class Engine {
         this.gameObjects = [];
         this.newBodyId = 0;
         this.joints = [];
+        this.iterations = iterations
     };
 
     start() {
@@ -52,36 +54,38 @@ export class Engine {
     };
 
     translationSolver() {
-        for (let i = 0; i < engine.gameObjects.length; i++) {
-            for (let j = i + 1; j < engine.gameObjects.length; j++) {
-                const body1 = engine.gameObjects[i]
-                const body2 = engine.gameObjects[j]
-                if (body1.isStatic && body2.isStatic) {
-                    continue
-                }
-                if (!Collision.areColliding(body1, body2)) {
-                    continue;
-                }
-                if (body1.type === Type.Polygon) {
-                    if (body2.type === Type.Polygon) {
-                        let mtv = Collision.calculateSAT(body1, body2);
-                        if (mtv !== false) {
-                            if (body2.isStatic) {
-                                body1.pos = body1.pos.add(mtv.normal.normalize().scale(-mtv.length))
-                            } else if (body1.isStatic) {
-                                body2.pos = body2.pos.add(mtv.normal.normalize().scale(mtv.length))
-                            } else {
-                                body2.pos = body2.pos.add(mtv.normal.normalize().scale(mtv.length / 2))
-                                body1.pos = body1.pos.add(mtv.normal.normalize().scale(-mtv.length / 2))
-                            }
+        for (let it = 0; it < this.iterations; it++) {
+            for (let i = 0; i < engine.gameObjects.length; i++) {
+                for (let j = i + 1; j < engine.gameObjects.length; j++) {
+                    const body1 = engine.gameObjects[i]
+                    const body2 = engine.gameObjects[j]
+                    if (body1.isStatic && body2.isStatic) {
+                        continue
+                    }
+                    if (!Collision.areColliding(body1, body2)) {
+                        continue;
+                    }
+                    if (body1.type === Type.Polygon) {
+                        if (body2.type === Type.Polygon) {
+                            let mtv = Collision.calculateSAT(body1, body2);
+                            if (mtv !== false) {
+                                if (body2.isStatic) {
+                                    body1.pos = body1.pos.add(mtv.normal.normalize().scale(-mtv.length))
+                                } else if (body1.isStatic) {
+                                    body2.pos = body2.pos.add(mtv.normal.normalize().scale(mtv.length))
+                                } else {
+                                    body2.pos = body2.pos.add(mtv.normal.normalize().scale(mtv.length / 2))
+                                    body1.pos = body1.pos.add(mtv.normal.normalize().scale(-mtv.length / 2))
+                                }
 
-                            this.resolveCollision(body1, body2, mtv.normal)
+                                this.resolveCollision(body1, body2, mtv.normal)
+                            }
+                        } else {
+                            // todo
                         }
                     } else {
                         // todo
                     }
-                } else {
-                    // todo
                 }
             }
         }
@@ -113,7 +117,7 @@ export class Engine {
                 if (!Collision.areColliding(body1, body2)) {
                     continue;
                 }
-                if (body1.type === Body.Type.Circle && body1.type === Body.Type.Circle) { //TODO add more cases
+                if (body1.type === Type.Circle && body1.type === Type.Circle) { //TODO add more cases
                     continue;
                 }
                 let mtv = Collision.calculateSAT(body1, body2);
@@ -139,9 +143,9 @@ export class Engine {
                     let rn1 = mtv.penetratingPoint.cross(mtv.normal);
                     let rn2 = mtv.referencePoint.cross(mtv.normal);
 
-                    let k = mtv.penetratingBody.mInv + mtv.referenceBody.mInv;
-                    k += mtv.penetratingBody.IInv * (rn1 * rn1);
-                    k += mtv.referenceBody.IInv * (rn2 * rn2);
+                    let k = mtv.penetratingBody.massInv + mtv.referenceBody.massInv;
+                    k += mtv.penetratingBody.inertiaInv * (rn1 * rn1);
+                    k += mtv.referenceBody.inertiaInv * (rn2 * rn2);
 
                     let slop = 0.02;
                     let bias = 0.2 / this.dt * Math.max(mtv.length - slop, 0);

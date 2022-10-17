@@ -7,25 +7,25 @@
 </head>
 <body></body>
 <script>
-    let Body = end3in.Body,
+    let Rectangle = end3in.Rectangle,
+        Circle = end3in.Circle,
         Joint = end3in.Joint,
         Engine = end3in.Engine,
         Graphics = end3in.Graphics,
-        Vec2 = end3in.Vector;
+        Vec2 = end3in.Vec2;
 
-    engine = Engine.create(true, 'constraint');
+    engine = new Engine(true, 'constraint');
     engine.scale = 50;
 
-    const graphics = Graphics.create(1000, 1000, engine)
-    graphics.start()
 
-    let bodies = [Body.rect(3, 0.25, 0.25, 0.125)];
+
+    let bodies = [new Rectangle(3, 0.25, 0.25, 0.125)];
     let joints = [];
     let lastBody = bodies[0];
     for (let i = 0; i < 10; i++) {
-        let body = Body.circle(0, 0, 0.25);
+        let body = new Circle(0, 0, 0.25, 1);
         bodies.push(body);
-        let joint = Joint.create(lastBody, body, Vec2.create(i, i));
+        let joint = new Joint(lastBody, body, new Vec2(i, i));
         joints.push(joint);
         lastBody = body;
     }
@@ -34,10 +34,13 @@
     engine.g = 0;
     engine.start();
 
+    const graphics = new Graphics(1000, 1000, engine)
+    graphics.start()
+
     function setup() {
         for (let i = 1; i < bodies.length; i++) {
-            bodies[i].pos = Vec2.create(i * 0.5, i * 0.5);
-            bodies[i].v = Vec2.create(0, 0);
+            bodies[i].pos = new Vec2(i * 0.5, i * 0.5);
+            bodies[i].v = new Vec2(0, 0);
         }
     }
 

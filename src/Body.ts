@@ -11,15 +11,15 @@ export enum Type {
 
 export abstract class Body {
     pos: Vec2;
-    protected v: Vec2;
+    rot: number;
+    v: Vec2;
     readonly type: Type;
-    readonly rot: number;
     protected omega;
     readonly isStatic: boolean;
     readonly massInv: number;
-    readonly InertiaInv: number;
+    readonly inertiaInv: number;
     readonly restitution: number;
-    readonly color: string;
+    color: string;
     transformUpdateRequired: boolean;
 
     protected constructor(
@@ -38,10 +38,10 @@ export abstract class Body {
         this.isStatic = isStatic;
         if (this.isStatic) {
             this.massInv = 0
-            this.InertiaInv = 0
+            this.inertiaInv = 0
         } else {
             this.massInv = 1 / mass
-            this.InertiaInv = 1 / inertia
+            this.inertiaInv = 1 / inertia
         }
         this.restitution = restitution
         this.color = color
@@ -66,7 +66,7 @@ export abstract class Body {
     };
 
     applyAcceleration(a: Vec2, tau: number, dt: number) {
-        let alpha = tau * this.InertiaInv;
+        let alpha = tau * this.inertiaInv;
         this.v = this.v.add(a.scale(dt))
         this.omega += alpha * dt;
     };
@@ -76,7 +76,7 @@ export abstract class Body {
             return
         }
         this.v = this.v.sub(new Vec2(P.x * this.massInv, P.y * this.massInv))
-        // this.omega -= this.IInv * r.cross(P);
+        // this.omega -= this.inertiaInv * r.cross(P);
     };
 
     abstract isInside(point: Vec2): boolean
@@ -88,26 +88,27 @@ export class Polygon extends Body {
     private _transformedPoints: Vec2[] = [];
     private area: number;
 
-    constructor(points: Vec2[], x: number, y: number, mass: number, isStatic: boolean, rot: number) {
-        const maxR = (Math.max.apply(Math, points.map((v) => (v.sqrtMagnitude()))));
+    constructor(points: number[][], x: number, y: number, mass: number, isStatic: boolean, rot: number) {
+        const vertices = points.map(p => new Vec2(p[0], p[1]));
+        const maxR = (Math.max.apply(Math, vertices.map((v) => (v.sqrtMagnitude()))));
         const inertia = (mass * maxR * maxR) / 2;
         super(x, y, mass, inertia, Type.Polygon, isStatic, rot);
         let area = 0;
-        for (let i = 0; i < points.length; i++) {
-            const point = points[i]
-            const next: Vec2 = points[i % points.length]
+        for (let i = 0; i < vertices.length; i++) {
+            const point = vertices[i]
+            const next: Vec2 = vertices[i % vertices.length]
             area += (point.x * next.y) - (point.y * next.x);
         }
         area /= 2.0;
         this.area = area;
-        const meanX = points.map((o) => o.x).reduce((p, c) => p + c, 0) / points.length;
-        const meanY = points.map((o) => o.y).reduce((p, c) => p + c, 0) / points.length;
-        for (let point of points) {
+        const meanX = vertices.map((o) => o.x).reduce((p, c) => p + c, 0) / points.length;
+        const meanY = vertices.map((o) => o.y).reduce((p, c) => p + c, 0) / points.length;
+        for (let point of vertices) {
             this.points.push(new Vec2(point.x - meanX, point.y - meanY));
         }
     }
 
-    get transformedPoints() : Vec2[] {
+    get transformedPoints(): Vec2[] {
         if (this.transformUpdateRequired === false) {
             return this._transformedPoints
         }
@@ -143,7 +144,7 @@ export class RegularPolygon extends Polygon {
         for (let i = num_of_vertices - 1; i >= 0; i--) {
             let pos_x = Math.cos(2.0 * Math.PI / num_of_vertices * i) * radius;
             let pos_y = Math.sin(2.0 * Math.PI / num_of_vertices * i) * radius;
-            points.push(new Vec2(pos_x, pos_y))
+            points.push([pos_x, pos_y])
         }
         super(points, x, y, mass, isStatic, rot)
     };
@@ -151,18 +152,20 @@ export class RegularPolygon extends Polygon {
 
 export class Rectangle extends Polygon {
     constructor(width: number, height: number, x: number, y: number, mass: number, isStatic: boolean, rot: number) {
-        const points = [new Vec2(-width / 2, height / 2),
-            new Vec2(width / 2, height / 2),
-            new Vec2(width / 2, -height / 2),
-            new Vec2(-width / 2, -height / 2)];
+        const points = [[-width / 2, height / 2],
+            [width / 2, height / 2],
+            [width / 2, -height / 2],
+            [-width / 2, -height / 2]];
         super(points, x, y, mass, isStatic, rot);
     }
 }
 
 export class Circle extends Body {
+    radius: number;
     constructor(x: number, y: number, radius: number, mass: number) {
         const inertia = 2 / (mass * radius * radius);
         super(x, y, mass, inertia, Type.Circle);
+        this.radius = radius;
     }
 
     isInside(point: Vec2): boolean {
