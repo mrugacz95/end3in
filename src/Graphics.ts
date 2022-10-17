@@ -1,11 +1,27 @@
-const { Vec2 } = require("./Vector");
-const Body = require("./Body");
+import { Engine } from "./Engine";
+
+import { Vec2 } from "./Vector";
+import { Body, Circle, Polygon } from "./Body";
 
 export class Graphics {
     started = false;
+    engine: Engine;
+    debug: boolean;
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    scale: number;
+    width: number;
+    height: number;
+    dt: number;
+    cameraPos: Vec2;
 
-    constructor(width, height, engine, debug = false, scale = 60, cameraPos = new Vec2(3, 3), clickCallback = function () {
-    }) {
+    constructor(width: number,
+                height: number,
+                engine: Engine,
+                debug: boolean = false,
+                scale: number = 60,
+                cameraPos: Vec2 = new Vec2(3, 3),
+                clickCallback =  (_: Vec2) => {}) {
         this.engine = engine
         this.debug = debug
         this.canvas = document.createElement('canvas')
@@ -52,7 +68,7 @@ export class Graphics {
         this.ctx.scale(this.scale, this.scale);
         this.ctx.translate(this.cameraPos.x, this.cameraPos.y);
         for (let body of bodies) {
-            this.drawBody(this.ctx, body, this.debug)
+            this.drawBody(body, this.debug)
         }
         this.ctx.restore()
     }
@@ -63,43 +79,43 @@ export class Graphics {
         this.ctx.fillStyle = "#000000";
     };
 
-    drawBody(ctx, body, debug) {
-        if (body.type === Body.Type.Polygon) {
-            ctx.beginPath();
+    drawBody(body: Body, debug: boolean) {
+        if (body instanceof Polygon) {
+            this.ctx.beginPath();
             for (let i = 0; i < body.points.length + 1; i++) {
                 let next = body.points[i % body.points.length]
                     .rotate(body.rot)
                     .transpose(body.pos.x, body.pos.y);
                 if (i === 0) {
-                    ctx.moveTo(next.x, next.y);
+                    this.ctx.moveTo(next.x, next.y);
                 } else {
-                    ctx.lineTo(next.x, next.y)
+                    this.ctx.lineTo(next.x, next.y)
                 }
             }
-            ctx.fillStyle = body.color;
-            ctx.fill();
+            this.ctx.fillStyle = body.color;
+            this.ctx.fill();
             if (debug) {
                 for (let axis of body.transformedAxes) {
                     let mid = axis.axis.scale(0.5).add(axis.p1);
                     let norm = axis.axis.normal();
-                    ctx.lineWidth = 1 / this.scale;
-                    ctx.strokeStyle = "#7a7a7a";
-                    ctx.beginPath();
-                    ctx.moveTo(mid.x, mid.y);
-                    ctx.lineTo(mid.x + norm.x, mid.y + norm.y);
-                    ctx.stroke()
+                    this.ctx.lineWidth = 1 / this.scale;
+                    this.ctx.strokeStyle = "#7a7a7a";
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(mid.x, mid.y);
+                    this.ctx.lineTo(mid.x + norm.x, mid.y + norm.y);
+                    this.ctx.stroke()
                 }
 
             }
-        } else if (body.type === Body.Type.Circle) {
-            ctx.lineWidth = 1 / this.scale;
-            ctx.beginPath();
-            ctx.arc(body.pos.x, body.pos.y, body.radius, 0, 2 * Math.PI);
-            ctx.stroke();
+        } else if (body instanceof Circle) {
+            this.ctx.lineWidth = 1 / this.scale;
+            this.ctx.beginPath();
+            this.ctx.arc(body.pos.x, body.pos.y, body.radius, 0, 2 * Math.PI);
+            this.ctx.stroke();
         }
     }
 
-    clientToWorldPos(clientPos) {
+    clientToWorldPos(clientPos: Vec2) {
         const {top, left} = this.canvas.getBoundingClientRect()
         return new Vec2(clientPos.x, clientPos.y)
             .sub(new Vec2(top, left))
@@ -107,7 +123,7 @@ export class Graphics {
             .sub(this.cameraPos);
     }
 
-    worldToCanvasPosition(worldPos) {
+    worldToCanvasPosition(worldPos: Vec2) {
         return worldPos.scale(this.scale)
     }
 }

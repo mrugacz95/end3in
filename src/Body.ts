@@ -1,20 +1,11 @@
 import { Vec2 } from "./Vector";
-
-require("./Vector");
-const Utils = require("./Utlis");
-
-
-export enum Type {
-    Polygon,
-    Circle
-}
+import { Utils } from "./Utlis";
 
 export abstract class Body {
     pos: Vec2;
     rot: number;
     v: Vec2;
-    readonly type: Type;
-    protected omega;
+    omega: number;
     readonly isStatic: boolean;
     readonly massInv: number;
     readonly inertiaInv: number;
@@ -27,13 +18,11 @@ export abstract class Body {
         y: number,
         mass: number,
         inertia: number,
-        type: Type,
         isStatic: boolean = false,
         rot: number = 0,
         restitution: number = 0.5,
         color: string = Utils.randomColor()) {
         this.pos = new Vec2(x, y)
-        this.type = type
         this.rot = rot
         this.isStatic = isStatic;
         if (this.isStatic) {
@@ -71,12 +60,12 @@ export abstract class Body {
         this.omega += alpha * dt;
     };
 
-    applyImpulse(P: Vec2) {
+    applyImpulse(P: Vec2, r: Vec2) {
         if (this.isStatic) {
             return
         }
         this.v = this.v.sub(new Vec2(P.x * this.massInv, P.y * this.massInv))
-        // this.omega -= this.inertiaInv * r.cross(P);
+        this.omega -= this.inertiaInv * r.cross(P);
     };
 
     abstract isInside(point: Vec2): boolean
@@ -92,7 +81,7 @@ export class Polygon extends Body {
         const vertices = points.map(p => new Vec2(p[0], p[1]));
         const maxR = (Math.max.apply(Math, vertices.map((v) => (v.sqrtMagnitude()))));
         const inertia = (mass * maxR * maxR) / 2;
-        super(x, y, mass, inertia, Type.Polygon, isStatic, rot);
+        super(x, y, mass, inertia, isStatic, rot);
         let area = 0;
         for (let i = 0; i < vertices.length; i++) {
             const point = vertices[i]
@@ -164,7 +153,7 @@ export class Circle extends Body {
     radius: number;
     constructor(x: number, y: number, radius: number, mass: number) {
         const inertia = 2 / (mass * radius * radius);
-        super(x, y, mass, inertia, Type.Circle);
+        super(x, y, mass, inertia);
         this.radius = radius;
     }
 

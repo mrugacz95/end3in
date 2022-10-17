@@ -28,18 +28,12 @@
         engine.update()
         graphics.drawBodies(engine.gameObjects)
         rect1.pos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY));
-        if (Collision.calculateSAT(rect1, rect2, {'debug': true, 'context': graphics.ctx})) {
+        if (Collision.calculateSAT(rect1, rect2)) {
             rect1.color = "#e62131EE";
         } else {
             rect1.color = "#141ae6EE";
         }
     }
-
-    document.addEventListener("keydown", event => {
-        if (event.isComposing || event.code === 'Space') {
-            const mtv = Collision.calculateSAT(rect1, rect2, {'debug': true, 'context': graphics.ctx})
-        }
-    });
 
 </script>
 </html>

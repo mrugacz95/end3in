@@ -3,9 +3,6 @@ import { Vec2 } from "./Vector";
 
 export class Collision{
     static areColliding(body1 : Body, body2: Body) {
-        if (body1.type !== body2.type) {
-            return false // TODO add more calculations
-        }
         if (body1 instanceof Polygon && body2 instanceof Polygon) {
             let body1MinX = Number.MAX_VALUE, body1MaxX = -Number.MAX_VALUE,
                 body2MinX = Number.MAX_VALUE, body2MaxX = -Number.MAX_VALUE,
@@ -29,6 +26,8 @@ export class Collision{
                 body1MaxY > body2MinY;
         } else if (body1 instanceof Circle && body2 instanceof Circle) {
             return body1.pos.sub(body2.pos).sqrtMagnitude() < body1.radius + body2.radius;
+        } else {
+            throw new Error(`Collision between ${body1} and ${body2} Not implemented yet`);
         }
     };
 
@@ -103,10 +102,9 @@ export class Collision{
             if (referenceBody.pos.sub(incidentBody.pos).dot(mtvAxis) > 0) {
                 mtvAxis = mtvAxis.inv()
             }
-            let penetratingPointInWorld = incP2
 
             let penetratingPoint;
-            if (referenceBody.isInside(penetratingPointInWorld)) {
+            if (referenceBody.isInside(incP2)) {
                 penetratingPoint = incP2;
             } else {
                 penetratingPoint = incP1;

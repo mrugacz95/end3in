@@ -46,7 +46,7 @@
             if (gameObj === triangle) {
                 continue;
             }
-            if (Collision.calculateSAT(gameObj, triangle, {'context': graphics.ctx, 'debug': true})) {
+            if (Collision.calculateSAT(gameObj, triangle)) {
                 triangle.color = "#e62131EE";
             }
         }

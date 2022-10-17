@@ -32,16 +32,16 @@
 
     document.addEventListener("keydown", event => {
         if (event.isComposing || event.code === 'ArrowUp') {
-            obj.applyImpulse(new Vec2(0, 50))
+            obj.applyImpulse(new Vec2(0, 50), mtv.penetratingPoint)
         }
         if (event.isComposing || event.code === 'ArrowDown') {
-            obj.applyImpulse(new Vec2(0, -50))
+            obj.applyImpulse(new Vec2(0, -50), mtv.penetratingPoint)
         }
         if (event.isComposing || event.code === 'ArrowLeft') {
-            obj.applyImpulse(new Vec2(50, 0))
+            obj.applyImpulse(new Vec2(50, 0), mtv.penetratingPoint)
         }
         if (event.isComposing || event.code === 'ArrowRight') {
-            obj.applyImpulse(new Vec2(-50, 0))
+            obj.applyImpulse(new Vec2(-50, 0), mtv.penetratingPoint)
         }
     });
 </script>
