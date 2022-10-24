@@ -7,31 +7,31 @@
 </head>
 <body></body>
 <script>
-    const Body = end3in.Body,
+    const Circle = end3in.Circle,
         Engine = end3in.Engine,
         Collision = end3in.Collision,
         Graphics = end3in.Graphics,
-        Vec2 = end3in.Vector;
+        Vec2 = end3in.Vec2;
 
-    let engine = Engine.create();
+    let engine = new Engine();
     engine.g = 0;
 
     const gameObjects = [];
     for (let i = 0; i < 6; i++) {
-        let obj = Body.circle(0.5, -0.5 + i, 0.25);
+        let obj = new Circle(0.5, -0.5 + i, 0.25);
         gameObjects.push(obj)
     }
     engine.addAllBodies(gameObjects);
     engine.start();
 
-    const graphics = Graphics.create(1000, 1000, engine)
+    const graphics = new Graphics(1000, 1000, engine)
     graphics.start()
 
     function setup() {
         for (let i = 0; i < gameObjects.length; i++) {
-            gameObjects[i].pos = Vec2.create(-0.5 + i, 2);
+            gameObjects[i].pos = new Vec2(-0.5 + i, 2);
             gameObjects[i].omega = 0;
-            gameObjects[i].v = Vec2.create(Math.random(), Math.random());
+            gameObjects[i].v = new Vec2(Math.random(), Math.random());
         }
     }
 

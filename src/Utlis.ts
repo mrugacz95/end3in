@@ -1,9 +1,5 @@
-const Utils = {};
-
-module.exports = Utils;
-
-(function () {
-    Utils.randomColor = function () {
+export class Utils {
+    static randomColor() {
         const letters = '0123456789ABCDEF';
         let color = '#';
         for (let i = 0; i < 6; i++) {
@@ -11,4 +7,4 @@ module.exports = Utils;
         }
         return color;
     };
-})()
+}

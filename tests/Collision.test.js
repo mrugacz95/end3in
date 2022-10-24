@@ -1,10 +1,10 @@
-const Collision = require("../src/Collision");
-const Body = require("../src/Body");
+const {Collision} = require("../src/Collision");
+const {Rectangle} = require("../src/Body");
 
 test('checks AABB collision detection when not colliding', () => {
     // given
-    const b1 = Body.rect(1, 1, -1, 0)
-    const b2 = Body.rect(1, 1, 1, 0)
+    const b1 = new Rectangle(1, 1, -1, 0)
+    const b2 = new Rectangle(1, 1, 1, 0)
 
     const result = Collision.areColliding(b1, b2)
 
@@ -13,8 +13,8 @@ test('checks AABB collision detection when not colliding', () => {
 
 test('checks AABB collision detection when colliding', () => {
     // given
-    const b1 = Body.rect(1, 1, -0.25, 0.25)
-    const b2 = Body.rect(1, 1, 0.25, -0.25)
+    const b1 = new Rectangle(1, 1, -0.25, 0.25)
+    const b2 = new Rectangle(1, 1, 0.25, -0.25)
 
     const result = Collision.areColliding(b1, b2)
 
@@ -23,8 +23,8 @@ test('checks AABB collision detection when colliding', () => {
 
 test('checks AABB collision detection when rotated and colliding', () => {
     // given
-    const b1 = Body.rect(1, 1, -0.5, 0.5, {rot: Math.PI / 4})
-    const b2 = Body.rect(1, 1, 0.5, -0.5, {rot: Math.PI / 4})
+    const b1 = new Rectangle(1, 1, -0.5, 0.5, 1, false, Math.PI / 4)
+    const b2 = new Rectangle(1, 1, 0.5, -0.5, 1, false, Math.PI / 4)
 
     const result = Collision.areColliding(b1, b2)
 
@@ -33,8 +33,8 @@ test('checks AABB collision detection when rotated and colliding', () => {
 
 test('checks SAT collision detection when not colliding', () => {
     // given
-    const b1 = Body.rect(1, 1, -1, 0)
-    const b2 = Body.rect(1, 1, 1, 0)
+    const b1 = new Rectangle(1, 1, -1, 0)
+    const b2 = new Rectangle(1, 1, 1, 0)
 
     const result = Collision.calculateSAT(b1, b2)
 
@@ -43,8 +43,8 @@ test('checks SAT collision detection when not colliding', () => {
 
 test('checks SAT collision detection when colliding', () => {
     // given
-    const b1 = Body.rect(1, 1, -0.25, 0.25)
-    const b2 = Body.rect(1, 1, 0.25, -0.25)
+    const b1 = new Rectangle(1, 1, -0.25, 0.25)
+    const b2 = new Rectangle(1, 1, 0.25, -0.25)
 
     const result = Collision.calculateSAT(b1, b2)
 
@@ -53,8 +53,8 @@ test('checks SAT collision detection when colliding', () => {
 
 test('checks SAT collision detection when rotated and not colliding', () => {
     // given
-    const b1 = Body.rect(1, 1, -0.5, 0.5, {rot: Math.PI / 4})
-    const b2 = Body.rect(1, 1, 0.5, -0.5, {rot: Math.PI / 4})
+    const b1 = new Rectangle(1, 1, -0.5, 0.5, 1, false, Math.PI / 4)
+    const b2 = new Rectangle(1, 1, 0.5, -0.5, 1, false, Math.PI / 4)
 
     const result = Collision.calculateSAT(b1, b2)
 
@@ -63,9 +63,9 @@ test('checks SAT collision detection when rotated and not colliding', () => {
 
 test('checks SAT mtv when colliding', () => {
     // given
-    const b1 = Body.rect(1, 1, 0, 0, )
+    const b1 = new Rectangle(1, 1, 0, 0,)
     const b2Size = 3 * Math.sqrt(2) / 4
-    const b2 = Body.rect(b2Size, b2Size, 0, 1, {rot: Math.PI / 4})
+    const b2 = new Rectangle(b2Size, b2Size, 0, 1, 1, false, Math.PI / 4)
 
     const result = Collision.calculateSAT(b1, b2)
 

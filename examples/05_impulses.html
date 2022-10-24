@@ -8,23 +8,23 @@
 <body></body>
 <script>
     const Engine = end3in.Engine,
-        Body = end3in.Body,
+        Rectangle = end3in.Rectangle,
         Collision = end3in.Collision,
         Graphics = end3in.Graphics;
-    let rect = Body.rect(0.5, 0.5, 1.5, 0);
+    let rect = new Rectangle(0.5, 0.5, 1.5, 0, 1, false);
     rect.vy = 0.3;
-    const engine = Engine.create();
+    const engine = new Engine(false, 'impulse');
     engine.addBody(rect);
 
-    let graphics = Graphics.create(1000, 1000, engine)
+    let graphics = new Graphics(1000, 1000, engine)
     graphics.start()
 
     let pos = [[1, 1], [2, 2], [1, 3], [2, 4]];
     for (let p of pos) {
-        let body = Body.rect(0.5, 0.5, p[0], p[1], {'isStatic': true, 'rot': Math.PI * 2 * Math.random()});
+        let body = new Rectangle(0.5, 0.5, p[0], p[1], 1, true,  Math.PI * 2 * Math.random());
         engine.addBody(body);
     }
-    let body = Body.rect(3, 8, 1.5, 7, {'isStatic': true, 'rot': Math.PI / 2});
+    let body = new Rectangle(3, 8, 1.5, 7, 1, true, Math.PI / 2);
     engine.addBody(body);
     engine.start();
 </script>

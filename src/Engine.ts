@@ -1,73 +1,73 @@
-require('./Collision');
-require('./Solver');
+import { Body, Circle, Polygon } from "./Body";
+import { Vec2 } from "./Vector"
+import { Collision } from "./Collision";
+import { Solver } from "./Solver";
 
-const Engine = {};
+export class Engine {
+    solver: Solver;
+    dt: number;
+    debug: boolean;
+    gameObjects: Body[];
+    g: number;
+    iterations: number;
 
-module.exports = Engine;
-
-(function () {
-
-    Engine.create = function (debug = false, solver = 'impulse') {
+    constructor(debug = false, solver: Solver, iterations = 20) {
         this.solver = solver;
         this.dt = 1 / 60; // take dt from elapsed time
         this.debug = debug;
-        this.g = -9.81;
+        this.g = 9.81;
         this.gameObjects = [];
-        this.newBodyId = 0;
-        this.joints = [];
-        return Object.assign({}, this)
+        this.iterations = iterations
     };
 
-    Engine.start = function () {
+    start() {
         let self = this;
         window.setInterval(function () {
             self.update.call(self)
         }, 1000 * self.dt);
     };
 
-    Engine.update = function () {
-        for (let obj of this.gameObjects) {
-            if (obj.mInv !== 0) {
-                obj.applyAcceleration(0, this.g, 0, engine.dt);
+    update() {
+        for (let it = 0; it < this.iterations; it++) {
+            for (let obj of this.gameObjects) {
+                if (obj.isStatic !== true) {
+                    obj.applyAcceleration(new Vec2(0, this.g), 0, this.dt / this.iterations);
+                }
             }
-        }
-        if (this.solver === 'impulse') {
-            this.impulseSolver();
-        } else if (this.solver === 'constraint') {
-            this.constraintSolver();
-        } else if (this.solver === 'translation') {
-            this.translationSolver();
-        }
-        for (let obj of this.gameObjects) {
-            obj.update(this.dt);
+            if (this.solver === 'impulse') {
+                this.impulseSolver();
+            } else if (this.solver === 'translation') {
+                this.translationSolver();
+            }
+            for (let obj of this.gameObjects) {
+                obj.update(this.dt/ this.iterations);
+            }
         }
     };
 
-    Engine.addBody = function (body) {
-        body.bodyId = this.newBodyId;
-        this.newBodyId += 1;
+    addBody(body: Body) {
         this.gameObjects.push(body);
     };
 
-    Engine.addAllBodies = function (bodies) {
+    addAllBodies(bodies: Body[]) {
         for (let body of bodies) {
             this.addBody(body)
         }
     };
 
-    Engine.translationSolver = function () {
-        for (let i = 0; i < engine.gameObjects.length; i++) {
-            for (let j = i + 1; j < engine.gameObjects.length; j++) {
-                const body1 = engine.gameObjects[i]
-                const body2 = engine.gameObjects[j]
-                if (body1.isStatic && body2.isStatic){
+    translationSolver() {
+        for (let i = 0; i < this.gameObjects.length; i++) {
+            for (let j = i + 1; j < this.gameObjects.length; j++) {
+                const body1 = this.gameObjects[i]
+                const body2 = this.gameObjects[j]
+                if (body1.isStatic && body2.isStatic) {
                     continue
                 }
                 if (!Collision.areColliding(body1, body2)) {
                     continue;
                 }
-                if (body1.type === Body.Type.Polygon) {
-                    if (body2.type === Body.Type.Polygon) {
+                if (body1 instanceof Polygon) {
+                    if (body2 instanceof Polygon) {
                         let mtv = Collision.calculateSAT(body1, body2);
                         if (mtv !== false) {
                             if (body2.isStatic) {
@@ -82,16 +82,16 @@ module.exports = Engine;
                             this.resolveCollision(body1, body2, mtv.normal)
                         }
                     } else {
-                        // todo
+                        throw new Error("Collision is only implemented between polygon and other polygon")
                     }
                 } else {
-                    // todo
+                    throw new Error("Collision with circle is not implemented yet")
                 }
             }
         }
     }
 
-    Engine.resolveCollision = function (body1, body2, normal){
+    resolveCollision(body1: Body, body2: Body, normal: Vec2) {
         const relativeVelocity = body2.v.sub(body1.v);
 
         if (relativeVelocity.dot(normal) > 0) {
@@ -100,16 +100,16 @@ module.exports = Engine;
 
         const e = Math.min(body1.restitution, body2.restitution);
 
-        let j = -(1 + e) *  relativeVelocity.dot(normal)
-        j /= body1.mInv + body2.mInv;
+        let j = -(1 + e) * relativeVelocity.dot(normal)
+        j /= body1.massInv + body2.massInv;
 
         const impulse = normal.scale(j);
 
-        body1.v = body1.v.sub(impulse.scale(body1.mInv));
-        body2.v = body2.v.add(impulse.scale(body2.mInv));
+        body1.v = body1.v.sub(impulse.scale(body1.massInv));
+        body2.v = body2.v.add(impulse.scale(body2.massInv));
     }
 
-    Engine.impulseSolver = function () {
+    impulseSolver() {
         for (let i = 0; i < this.gameObjects.length; i++) {
             for (let j = i + 1; j < this.gameObjects.length; j++) {
                 let body1 = this.gameObjects[i]
@@ -117,7 +117,7 @@ module.exports = Engine;
                 if (!Collision.areColliding(body1, body2)) {
                     continue;
                 }
-                if (body1.type === Body.Type.Circle && body1.type === Body.Type.Circle) { //TODO add more cases
+                if (body1 instanceof Circle && body1 instanceof Circle) { //TODO add more cases
                     continue;
                 }
                 let mtv = Collision.calculateSAT(body1, body2);
@@ -143,49 +143,22 @@ module.exports = Engine;
                     let rn1 = mtv.penetratingPoint.cross(mtv.normal);
                     let rn2 = mtv.referencePoint.cross(mtv.normal);
 
-                    let k = mtv.penetratingBody.mInv + mtv.referenceBody.mInv;
-                    k += mtv.penetratingBody.IInv * (rn1 * rn1);
-                    k += mtv.referenceBody.IInv * (rn2 * rn2);
+                    let k = mtv.penetratingBody.massInv + mtv.referenceBody.massInv;
+                    k += mtv.penetratingBody.inertiaInv * (rn1 * rn1);
+                    k += mtv.referenceBody.inertiaInv * (rn2 * rn2);
 
                     let slop = 0.02;
                     let bias = 0.2 / this.dt * Math.max(mtv.length - slop, 0);
                     let P = (relativeVelocity + sign * bias) / k;
 
-                    P = mtv.normal.scale(P).normal();
+                    let Pvec = mtv.normal.scale(P).normal();
 
-                    let refVector = P.scale(sign);
-                    let indVector = P.scale(-1 * sign);
-                    incident.applyImpulse(indVector);
-                    reference.applyImpulse(refVector);
+                    let refVector = Pvec.scale(sign);
+                    let indVector = Pvec.scale(-1 * sign);
+                    incident.applyImpulse(indVector, mtv.penetratingPoint);
+                    reference.applyImpulse(refVector, mtv.penetratingPoint);
                 }
             }
         }
     };
-    Engine.addJoint = function (joint) {
-        this.joints.push(joint)
-    };
-    Engine.addAllJoints = function (joints) {
-        for (let joint of joints) {
-            this.addJoint(joint);
-        }
-    };
-
-    Engine.constraintSolver = function () {
-        for (let i = 0; i < 4; i++) {
-            for (let c of this.joints) {
-                let J = [];
-                let pA = c.local1Anchor.rotate(c.body1.rot).transpose(c.body1.pos);
-                let pB = c.local1Anchor.rotate(c.body2.rot).transpose(c.body2.pos);
-                J.push(2 * (pA.x - pB.x),
-                    2 * (pA.y - pB.y),
-                    // 2 * pA.sub(pB).scale(-1).cross(pA.sub(c.body1.pos)),
-                    2 * (pB.x - pA.x),
-                    2 * (pB.y - pA.y),
-                    // 2 * pA.sub(pB).scale(-1).cross(pB.sub(c.body1.pos)),
-                );
-                let bias = (0.2 / this.dt) * pA.sub(pB).sqrtMagnitude();
-                // let lambda = -
-            }
-        }
-    };
-}());
+}

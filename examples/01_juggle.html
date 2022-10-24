@@ -8,21 +8,18 @@
 <body>
 </body>
 <script>
-    const Engine = end3in.Engine,
-        Body = end3in.Body,
-        Graphics = end3in.Graphics,
-        Vec2 = end3in.Vector;
-    const engine = Engine.create();
-    const rect1 = Body.rect(0.5, 0.5, 3, 4);
+    const Engine = end3in.Engine;
+    const engine = new Engine();
+    const rect1 = new end3in.Rectangle(0.5, 0.5, 3, 4);
     engine.addBody(rect1);
     engine.start();
 
     function applyForce(worldPosition) {
-        const force = rect1.pos.sub(worldPosition).normalize().scale(1);
+        const force = rect1.pos.sub(worldPosition).normalize();
         rect1.applyForce(force.x, -force.y, worldPosition.x, worldPosition.y, 1000);
     }
 
-    const graphics = Graphics.create(1000, 1000, engine, true,  60, applyForce)
+    const graphics = new end3in.Graphics(1000, 1000, engine, true,  60, applyForce)
     graphics.start()
 
     function getDocumentOffsetPosition(el) {

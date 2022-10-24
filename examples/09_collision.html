@@ -8,57 +8,42 @@
 <body style="margin: 0;"></body>
 <script>
     const Engine = end3in.Engine,
-        Body = end3in.Body,
+        Polygon = end3in.Polygon,
         Collision = end3in.Collision,
         Graphics = end3in.Graphics,
-        Vec2 = end3in.Vector;
+        Vec2 = end3in.Vec2,
+        Rectangle = end3in.Rectangle;
 
-    let engine = Engine.create();
-    const rect1 = Body.rect(0.5, 0.5,
-        1, 6, {
-            'color': "rgba(230,23,74,0.93)",
-            "rot": Math.PI / 6
-        });
-    const rect2 = Body.rect(0.5, 0.5,
-        0, 6, {
-            'color': "rgba(26,230,73,0.93)",
-            "rot": Math.PI / 6
-        });
-    let poly = Body.polygon([[0.25, 0.25],
+    let engine = new Engine();
+    const rect1 = new Rectangle(0.5, 0.5,
+        1, 6, 1, true, Math.PI / 6);
+    const rect2 = new Rectangle(0.5, 0.5,
+        0, 6, 1, true, Math.PI / 6);
+    let poly = new Polygon([[0.25, 0.25],
         [-0.25,0.25],
         [-0.25, -0.25],
         [0.25, -0.25]],
-        2, 2, {
-            'color': "rgba(230,182,46,0.93)",
-            "rot": Math.PI / 7
-        });
-    const ground = Body.rect(10, 2,
-        0, 5.0, {
-            'color': "rgba(0,0,0,0.93)",
-            "isStatic": true
-        });
+        2, 2, true, Math.PI / 7);
+    const ground = new Rectangle(10, 2,
+        0, 5.0, 1, true);
     engine.addBody(rect1);
     engine.addBody(rect2);
     engine.addBody(poly);
     engine.addBody(ground);
-    // engine.g = 0;
+
     engine.start();
 
-    const graphics = Graphics.create(700, 700, engine)
+    const graphics = new Graphics(700, 700, engine)
     graphics.start()
 
 
     function setup() {
-        rect1.pos = Vec2.create(0, 3);
-        rect2.pos = Vec2.create(0, 3.5);
+        rect1.pos = new Vec2(0, 3);
+        rect2.pos = new Vec2(0, 3.5);
         rect2.rot = 0;
         rect1.rot = 0;
-        rect2.v = Vec2.create(0, 0);
-        rect1.v = Vec2.create(0, 0);
-        // rect2.m = 1;
-        // rect2.mInv = 1;
-        // rect1.omega = Math.PI ;
-        // rect2.omega = Math.PI / 6;
+        rect2.v = new Vec2(0, 0);
+        rect1.v = new Vec2(0, 0);
     }
 
     setup();
