@@ -12,36 +12,37 @@
         Collision = end3in.Collision,
         Graphics = end3in.Graphics,
         Polygon = end3in.Polygon,
+        Circle = end3in.Circle,
         Vec2 = end3in.Vec2;
 
     let engine = new Engine(false, 'translation');
 
-    const obj = new Polygon([[-0.5, 1.0], [2.0, 1.0], [0.5, 0.0]], 0, 0)
+    const obj = new Polygon([[-0.5, 1.0], [2.0, 1.0], [0.5, 0.0]], 0, 0, 50, false)
     engine.addBody(obj)
 
-    for (let i = 0; i < 10; i++) {
-        engine.addBody(new Rectangle(0.5, 0.5, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 1, Math.random() >= 0.8));
+    for (let i = 0; i < 6; i++) {
+        engine.addBody(new Rectangle(0.5 + Math.random() * 0.1, 0.5 + Math.random() * 0.1, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 1, Math.random() >= 0.8));
         engine.addBody(new Polygon([[0.0, 0.0], [0.5, 0.0], [0.3, -0.8]], (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 1, Math.random() >= 0.8));
+        engine.addBody(new Circle(Math.random() * 0.2 + 0.2, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 1, Math.random() >= 0.8));
     }
     engine.addBody(new Rectangle(7, 1, -0, 4, 1, true));
-
     engine.start();
 
-    const graphics = new Graphics(1500, 1500, engine, {debug: true}, scale = 60, cameraPos = new Vec2(6, 6))
+    const graphics = new Graphics({width: 1500, height: 1500, engine: engine, debug: true, cameraPos: new Vec2(4, 4)})
     graphics.start()
 
     document.addEventListener("keydown", event => {
         if (event.isComposing || event.code === 'ArrowUp') {
-            obj.applyImpulse(new Vec2(0, 50), mtv.penetratingPoint)
+            obj.applyImpulse(new Vec2(0, 5), Vec2.ZERO)
         }
         if (event.isComposing || event.code === 'ArrowDown') {
-            obj.applyImpulse(new Vec2(0, -50), mtv.penetratingPoint)
+            obj.applyImpulse(new Vec2(0, -5), Vec2.ZERO)
         }
         if (event.isComposing || event.code === 'ArrowLeft') {
-            obj.applyImpulse(new Vec2(50, 0), mtv.penetratingPoint)
+            obj.applyImpulse(new Vec2(5, 0), Vec2.ZERO)
         }
         if (event.isComposing || event.code === 'ArrowRight') {
-            obj.applyImpulse(new Vec2(-50, 0), mtv.penetratingPoint)
+            obj.applyImpulse(new Vec2(-5, 0), Vec2.ZERO)
         }
     });
 </script>

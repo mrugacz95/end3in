@@ -17,8 +17,10 @@
     engine.scale = 100;
     const rect1 = new Rectangle(0.5, 0.5, 1, 2, 1, true, 0.1);
     const rect2 = new Rectangle(1.0, 1.5, 2, 2.5,1, true,  Math.PI / 4);
+    const circle = new end3in.Circle(0.3,  2,0.5, 1, true);
     engine.addBody(rect1);
     engine.addBody(rect2);
+    engine.addBody(circle);
     engine.start();
 
     const graphics = new Graphics(1000, 1000, engine, true, 60, new Vec2(6,6))
@@ -30,7 +32,9 @@
         rect1.pos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY));
         if (Collision.calculateSAT(rect1, rect2)) {
             rect1.color = "#e62131EE";
-        } else {
+        } else if (Collision.calculateSAT(rect1, circle))  {
+            rect1.color = "rgba(20,230,23,0.93)";
+        }else {
             rect1.color = "#141ae6EE";
         }
     }
