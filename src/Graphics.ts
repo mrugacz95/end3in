@@ -134,13 +134,16 @@ export class Graphics {
 
     clientToWorldPos(clientPos: Vec2) {
         const {top, left} = this.canvas.getBoundingClientRect()
-        return new Vec2(clientPos.x, clientPos.y)
+        return clientPos
             .sub(new Vec2(top, left))
             .scale(1 / this.scale)
             .sub(this.cameraPos);
     }
 
     worldToCanvasPosition(worldPos: Vec2) {
-        return worldPos.scale(this.scale)
+        return worldPos
+            .add(this.cameraPos)
+            .scale(this.scale)
+
     }
 }

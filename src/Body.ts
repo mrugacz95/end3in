@@ -1,5 +1,6 @@
 import { Vec2 } from "./Vector";
 import { Utils } from "./Utlis";
+import { AABB } from "./AABB";
 
 export abstract class Body {
     pos: Vec2;
@@ -12,6 +13,16 @@ export abstract class Body {
     readonly restitution: number;
     color: string;
     transformUpdateRequired: boolean;
+    private _cachedAABB: AABB
+
+    get AABB(): AABB {
+        if (this._cachedAABB === null) {
+            this._cachedAABB = this._AABB
+        }
+        return this._cachedAABB
+    }
+
+    protected abstract get _AABB(): AABB
 
     protected constructor(
         x: number,
@@ -37,12 +48,14 @@ export abstract class Body {
         this.v = Vec2.ZERO
         this.omega = 0
         this.transformUpdateRequired = true
+        this._cachedAABB = null
     }
 
     update(dt: number) {
         this.pos = this.pos.add(this.v.scale(dt))
         // this.rot += this.omega * dt;
         this.transformUpdateRequired = true;
+        this._cachedAABB = null
     };
 
     applyForce(fx: number, fy: number, px: number, py: number, dt: number) {
@@ -125,6 +138,20 @@ export class Polygon extends Body {
         }
         return true;
     }
+
+    get _AABB(): AABB {
+        let minX = Number.MAX_VALUE,
+            maxX = -Number.MAX_VALUE,
+            maxY = -Number.MAX_VALUE,
+            minY = Number.MAX_VALUE;
+        for (let p of this.transformedPoints) {
+            minX = Math.min(minX, p.x)
+            maxX = Math.max(maxX, p.x);
+            minY = Math.min(minY, p.y);
+            maxY = Math.max(maxY, p.y);
+        }
+        return new AABB(minX, minY, maxX, maxY)
+    }
 }
 
 export class RegularPolygon extends Polygon {
@@ -152,13 +179,21 @@ export class Rectangle extends Polygon {
 export class Circle extends Body {
     radius: number;
 
-    constructor(radius: number,x: number, y: number, mass: number, isStatic :boolean) {
+    constructor(radius: number, x: number, y: number, mass: number, isStatic: boolean) {
         const inertia = 2 / (mass * radius * radius);
         super(x, y, mass, inertia, isStatic);
         this.radius = radius;
     }
 
     isInside(point: Vec2): boolean {
-        return false;
+        return point.distance(this.pos) < this.radius
+    }
+
+    get _AABB(): AABB {
+        let minX = this.pos.x - this.radius;
+        let maxX = this.pos.x + this.radius;
+        let minY = this.pos.y - this.radius;
+        let maxY = this.pos.y + this.radius;
+        return new AABB(minX, minY, maxX, maxY)
     }
 }

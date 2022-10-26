@@ -1,6 +1,6 @@
 import { Body, Circle } from "./Body";
 import { Vec2 } from "./Vector"
-import { Collision } from "./Collision";
+import { Collision, CollisionManifold } from "./Collision";
 import { Solver } from "./Solver";
 
 export class Engine {
@@ -77,13 +77,15 @@ export class Engine {
                         body1.pos = body1.pos.add(collisionManifold.normal.normalize().scale(-collisionManifold.depth / 2))
                     }
 
-                    this.resolveCollision(body1, body2, collisionManifold.normal)
+                    this.resolveCollision(body1, body2, collisionManifold)
                 }
             }
         }
     }
 
-    resolveCollision(body1: Body, body2: Body, normal: Vec2) {
+    resolveCollision(body1: Body, body2: Body, collisionManifold: CollisionManifold) {
+        const normal = collisionManifold.normal
+
         const relativeVelocity = body2.v.sub(body1.v);
 
         if (relativeVelocity.dot(normal) > 0) {
@@ -112,8 +114,7 @@ export class Engine {
                 if (body1 instanceof Circle && body1 instanceof Circle) { //TODO add more cases
                     continue;
                 }
-                let collisionManifold
-                    = Collision.calculateSAT(body1, body2);
+                let collisionManifold = Collision.calculateSAT(body1, body2);
                 if (collisionManifold) {
                     let incident = collisionManifold.body1;
                     let reference = collisionManifold.body2;

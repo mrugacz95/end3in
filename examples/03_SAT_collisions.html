@@ -10,33 +10,70 @@
 <script>
     const Engine = end3in.Engine,
         Rectangle = end3in.Rectangle,
+        Circle = end3in.Circle,
         Collision = end3in.Collision,
         Graphics = end3in.Graphics,
         Vec2 = end3in.Vec2;
     const engine = new Engine();
     engine.scale = 100;
-    const rect1 = new Rectangle(0.5, 0.5, 1, 2, 1, true, 0.1);
-    const rect2 = new Rectangle(1.0, 1.5, 2, 2.5,1, true,  Math.PI / 4);
-    const circle = new end3in.Circle(0.3,  2,0.5, 1, true);
-    engine.addBody(rect1);
+    const mouseRect = new Rectangle(0.5, 0.5, 1, 2, 1, true);
+    const rect2 = new Rectangle(1.0, 1.5, 2, 2.5, 1, true);
+    const circle1 = new end3in.Circle(0.3, 1, 0.5, 1, true);
+    const mouseCircle = new end3in.Circle(0.6, 2, 0.5, 1, true);
+    engine.addBody(mouseRect);
     engine.addBody(rect2);
-    engine.addBody(circle);
+    engine.addBody(circle1);
+    engine.addBody(mouseCircle);
     engine.start();
 
-    const graphics = new Graphics(1000, 1000, engine, true, 60, new Vec2(6,6))
+    const graphics = new Graphics({width: 1000, height: 1000, engine: engine, debug: true, scale: 60, cameraPos: new Vec2(6, 6)})
 
     document.onmousemove = function (event) {
-        graphics.clear()
-        engine.update()
+        mouseRect.pos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY));
+        mouseCircle.pos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY)).add(new Vec2(1.5, 0));
         graphics.drawBodies(engine.gameObjects)
-        rect1.pos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY));
-        if (Collision.calculateSAT(rect1, rect2)) {
-            rect1.color = "#e62131EE";
-        } else if (Collision.calculateSAT(rect1, circle))  {
-            rect1.color = "rgba(20,230,23,0.93)";
-        }else {
-            rect1.color = "#141ae6EE";
+
+        function drawContactPoint(point) {
+            let clientPos = graphics.worldToCanvasPosition(point)
+            console.log(point)
+            console.log(clientPos)
+            graphics.ctx.fillStyle = "#ee801a";
+            graphics.ctx.beginPath();
+            graphics.ctx.arc(clientPos.x, clientPos.y, 5, 0, 2 * Math.PI);
+            graphics.ctx.fill();
         }
+
+        function collide(body1, body2) {
+            let collision = Collision.calculateSAT(body1, body2)
+            if (collision) {
+                switch (collision.contactCount) {
+                    case 1: {
+                        drawContactPoint(collision.contact1)
+                        break
+                    }
+                    case 2: {
+                        drawContactPoint(collision.contact1)
+                        drawContactPoint(collision.contact2)
+                        break
+                    }
+                }
+                return true
+            } else {
+                return false
+            }
+        }
+
+        if (collide(mouseRect, rect2) || collide(mouseRect, circle1)) {
+            mouseRect.color = "#e62131EE";
+        } else {
+            mouseRect.color = "#141ae6EE";
+        }
+        if (collide(mouseCircle, rect2) || collide(mouseCircle, circle1)) {
+            mouseCircle.color = "#e62131EE";
+        } else {
+            mouseCircle.color = "#141ae6EE";
+        }
+
     }
 
 </script>

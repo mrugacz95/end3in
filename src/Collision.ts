@@ -1,47 +1,10 @@
-import { Body, Polygon, Circle } from "./Body";
+import { Body, Circle, Polygon } from "./Body";
 import { Vec2 } from "./Vector";
+import { ContactPoints } from "./ContactPoints";
 
 export class Collision {
     static areAABBColliding(body1: Body, body2: Body) {
-        let body1MinX = Number.MAX_VALUE, body1MaxX = -Number.MAX_VALUE,
-            body2MinX = Number.MAX_VALUE, body2MaxX = -Number.MAX_VALUE,
-            body1MinY = Number.MAX_VALUE, body1MaxY = -Number.MAX_VALUE,
-            body2MinY = Number.MAX_VALUE, body2MaxY = -Number.MAX_VALUE;
-
-        if (body1 instanceof Polygon) {
-            for (let p of body1.transformedPoints) {
-                body1MinX = Math.min(body1MinX, p.x)
-                body1MaxX = Math.max(body1MaxX, p.x);
-                body1MinY = Math.min(body1MinY, p.y);
-                body1MaxY = Math.max(body1MaxY, p.y);
-            }
-        }
-        if (body2 instanceof Polygon) {
-            for (let p of body2.transformedPoints) {
-                body2MinX = Math.min(body2MinX, p.x);
-                body2MaxX = Math.max(body2MaxX, p.x);
-                body2MinY = Math.min(body2MinY, p.y);
-                body2MaxY = Math.max(body2MaxY, p.y);
-            }
-        }
-
-        if (body1 instanceof Circle) {
-            body1MinX = body1.pos.x - body1.radius;
-            body1MaxX = body1.pos.x + body1.radius;
-            body1MinY = body1.pos.y - body1.radius;
-            body1MaxY = body1.pos.y + body1.radius;
-        }
-
-        if (body2 instanceof Circle) {
-            body2MinX = body2.pos.x - body2.radius;
-            body2MaxX = body2.pos.x + body2.radius;
-            body2MinY = body2.pos.y - body2.radius;
-            body2MaxY = body2.pos.y + body2.radius;
-        }
-        return body1MinX < body2MaxX &&
-            body1MaxX > body2MinX &&
-            body1MinY < body2MaxY &&
-            body1MaxY > body2MinY;
+        return body1.AABB.collides(body2.AABB)
     };
 
     private static projectCircle(normal: Vec2, body1: Circle) {
@@ -81,29 +44,41 @@ export class Collision {
     }
 
     static calculateSAT(body1: Body, body2: Body): CollisionManifold {
+
+        let collisionManifold: CollisionManifold = undefined
+
         if (body1 instanceof Circle) {
             if (body2 instanceof Polygon) {
-                return Collision.intersectCirclePolygon(body1, body2)
+                collisionManifold = Collision.intersectCirclePolygon(body1, body2)
             } else if (body2 instanceof Circle) {
-                return Collision.intersectCircles(body1, body2)
+                collisionManifold = Collision.intersectCircles(body1, body2)
             } else {
                 throw new Error(`Colliding circle with ${body2} is not implemented yet`)
             }
         } else if (body1 instanceof Polygon) {
             if (body2 instanceof Polygon) {
-                return Collision.intersectPolygons(body1, body2)
+                collisionManifold = Collision.intersectPolygons(body1, body2)
             } else if (body2 instanceof Circle) {
-                let collisionManifold = Collision.intersectCirclePolygon(body2, body1)
+                collisionManifold = Collision.intersectCirclePolygon(body2, body1)
                 if (collisionManifold) {
+                    [collisionManifold.body1, collisionManifold.body2] = [collisionManifold.body2, collisionManifold.body1]
                     collisionManifold.normal = collisionManifold.normal.inv()
                 }
-                return collisionManifold
             } else {
                 throw new Error(`Colliding polygon with ${body2} is not implemented yet`)
             }
         } else {
             throw new Error(`Colliding ${body1} with ${body2} is not implemented yet`)
         }
+
+        if (collisionManifold) {
+            const contactPoints : Vec2[] = ContactPoints.getContactPoints(body1, body2)
+            collisionManifold.contact1 = contactPoints[0]
+            collisionManifold.contact2 = contactPoints[1]
+            collisionManifold.contactCount = contactPoints.length
+        }
+
+        return collisionManifold
     }
 
     private static intersectPolygons(body1: Polygon, body2: Polygon) {
@@ -194,8 +169,8 @@ export class Collision {
             returnedNormal = returnedNormal.inv()
         }
         return new CollisionManifold(
-            polygon,
             circle,
+            polygon,
             returnedNormal,
             returnedDepth,
             Vec2.ZERO,
