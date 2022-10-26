@@ -72,4 +72,8 @@ export class Vec2 {
         return [this.x, this.y]
     }
 
+    distance(other: Vec2){
+        return this.sub(other).sqrtMagnitude()
+    }
+
 }

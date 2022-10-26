@@ -3,6 +3,16 @@ import { Engine } from "./Engine";
 import { Vec2 } from "./Vector";
 import { Body, Circle, Polygon } from "./Body";
 
+interface GraphicsParameters {
+    width: number;
+    height: number;
+    engine: Engine;
+    debug?: boolean;
+    scale: number;
+    cameraPos: Vec2;
+    clickCallback?: ((_: Vec2) => void);
+}
+
 export class Graphics {
     started = false;
     engine: Engine;
@@ -15,13 +25,19 @@ export class Graphics {
     dt: number;
     cameraPos: Vec2;
 
-    constructor(width: number,
-                height: number,
-                engine: Engine,
-                debug: boolean = false,
-                scale: number = 60,
-                cameraPos: Vec2 = new Vec2(3, 3),
-                clickCallback =  (_: Vec2) => {}) {
+    constructor(
+        {
+            width,
+            height,
+            engine,
+            debug = false,
+            scale = 60,
+            cameraPos = new Vec2(3, 3),
+            clickCallback = ((_: Vec2) => {
+            })
+        }: GraphicsParameters) {
+        this.width = width
+        this.height = height
         this.engine = engine
         this.debug = debug
         this.canvas = document.createElement('canvas')
@@ -109,9 +125,10 @@ export class Graphics {
             }
         } else if (body instanceof Circle) {
             this.ctx.lineWidth = 1 / this.scale;
+            this.ctx.fillStyle = body.color;
             this.ctx.beginPath();
             this.ctx.arc(body.pos.x, body.pos.y, body.radius, 0, 2 * Math.PI);
-            this.ctx.stroke();
+            this.ctx.fill();
         }
     }
 

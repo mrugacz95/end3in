@@ -1,47 +1,88 @@
 const {Collision} = require("../src/Collision");
-const {Rectangle} = require("../src/Body");
+const {Rectangle, Circle} = require("../src/Body");
+const {Vec2} = require("../src/Vector");
 
-test('checks AABB collision detection when not colliding', () => {
+test('checks AABB collision detection when two rectangles not colliding', () => {
     // given
     const b1 = new Rectangle(1, 1, -1, 0)
     const b2 = new Rectangle(1, 1, 1, 0)
 
-    const result = Collision.areColliding(b1, b2)
+    const result = Collision.areAABBColliding(b1, b2)
 
     expect(result).toBe(false)
 })
 
-test('checks AABB collision detection when colliding', () => {
+test('checks AABB collision detection when two rectangles colliding', () => {
     // given
     const b1 = new Rectangle(1, 1, -0.25, 0.25)
     const b2 = new Rectangle(1, 1, 0.25, -0.25)
 
-    const result = Collision.areColliding(b1, b2)
+    const result = Collision.areAABBColliding(b1, b2)
 
     expect(result).not.toBe(false)
 })
 
-test('checks AABB collision detection when rotated and colliding', () => {
+test('checks AABB collision detection when two rectangles rotated and colliding', () => {
     // given
     const b1 = new Rectangle(1, 1, -0.5, 0.5, 1, false, Math.PI / 4)
     const b2 = new Rectangle(1, 1, 0.5, -0.5, 1, false, Math.PI / 4)
 
-    const result = Collision.areColliding(b1, b2)
+    const result = Collision.areAABBColliding(b1, b2)
 
     expect(result).not.toBe(false)
 })
 
-test('checks SAT collision detection when not colliding', () => {
+test('checks AABB collision detection when circle and rectangle not colliding', () => {
+    // given
+    const b1 = new Rectangle(1, 1, -1, 0)
+    const b2 = new Circle(1, 1, 0)
+
+    const result = Collision.areAABBColliding(b1, b2)
+
+    expect(result).toBe(false)
+})
+
+test('checks AABB collision detection when circle and rectangle colliding', () => {
+    // given
+    const b1 = new Circle(0.5, 0, 0)
+    const b2 = new Rectangle(1, 1, -1, 0, 1, true, Math.PI / 4)
+
+    const result = Collision.areAABBColliding(b1, b2)
+
+    expect(result).toBe(true)
+})
+
+test('checks AABB collision detection when two circles colliding', () => {
+    // given
+    const b1 = new Circle(0.5, 0, 0)
+    const b2 = new Circle(0.5, 0.99, 0.99)
+
+    const result = Collision.areAABBColliding(b1, b2)
+
+    expect(result).toBe(true)
+})
+
+test('checks AABB collision detection when two circles not colliding', () => {
+    // given
+    const b1 = new Circle(0.5, 0, 0)
+    const b2 = new Circle(0.5, 1.5, 0.25)
+
+    const result = Collision.areAABBColliding(b1, b2)
+
+    expect(result).toBe(false)
+})
+
+test('checks SAT collision detection when two rectangles not colliding', () => {
     // given
     const b1 = new Rectangle(1, 1, -1, 0)
     const b2 = new Rectangle(1, 1, 1, 0)
 
     const result = Collision.calculateSAT(b1, b2)
 
-    expect(result).toBe(false)
+    expect(result).toBe(undefined)
 })
 
-test('checks SAT collision detection when colliding', () => {
+test('checks SAT collision detection when two rectangles colliding', () => {
     // given
     const b1 = new Rectangle(1, 1, -0.25, 0.25)
     const b2 = new Rectangle(1, 1, 0.25, -0.25)
@@ -51,17 +92,17 @@ test('checks SAT collision detection when colliding', () => {
     expect(result).not.toBe(false)
 })
 
-test('checks SAT collision detection when rotated and not colliding', () => {
+test('checks SAT collision detection when two rectangles rotated and not colliding', () => {
     // given
     const b1 = new Rectangle(1, 1, -0.5, 0.5, 1, false, Math.PI / 4)
     const b2 = new Rectangle(1, 1, 0.5, -0.5, 1, false, Math.PI / 4)
 
     const result = Collision.calculateSAT(b1, b2)
 
-    expect(result).toBe(false)
+    expect(result).toBe(undefined)
 })
 
-test('checks SAT mtv when colliding', () => {
+test('checks SAT depth when colliding', () => {
     // given
     const b1 = new Rectangle(1, 1, 0, 0,)
     const b2Size = 3 * Math.sqrt(2) / 4
@@ -69,6 +110,56 @@ test('checks SAT mtv when colliding', () => {
 
     const result = Collision.calculateSAT(b1, b2)
 
-    expect(result.length).toBe(0.25)
+    expect(result.depth).toBe(0.25)
     expect(result.normal.toArray()).toEqual([-0, 1])
+})
+
+test('checks SAT collision detection when circle and rectangle not colliding', () => {
+    // given
+    const b1 = new Circle(0.5, 0, 0)
+    const b2 = new Rectangle(1, 1, -1, 1, 1, true, Math.PI / 4)
+
+    const result = Collision.calculateSAT(b1, b2)
+
+    expect(result).toBe(undefined)
+})
+
+test('checks SAT collision detection when circle and rectangle colliding with corner', () => {
+    // given
+    const b1 = new Circle(0.5, 0, 0)
+    const overlap = 0.1
+    const b2 = new Rectangle(1, 1, 0, -1 + overlap, 1)
+
+    const result = Collision.calculateSAT(b1, b2)
+
+    expect(result.depth).toBeCloseTo(overlap)
+    expect(result.normal.normalize().toArray()).toEqual(new Vec2(0, -1).normalize().toArray())
+})
+
+test('checks SAT collision detection when circle and rectangle colliding with edge', () => {
+    // given
+    const overlap = 0.1
+    const b1 = new Circle(0.5, 0, 0)
+    const b2 = new Rectangle(1, 1, 0.5, -1 + overlap, 1)
+
+    const result = Collision.calculateSAT(b1, b2)
+
+    expect(result.depth).toBeCloseTo(overlap)
+    expect(result.normal.normalize().toArray()).toEqual(new Vec2(0, -1).normalize().toArray())
+})
+
+test('checks SAT collision detection when two circles colliding', () => {
+    // given
+    const circlesRadius = 0.5
+    const c1 = new Circle(circlesRadius, 0, 0)
+    const overlap = 0.1
+    const circlesDist = circlesRadius * 2 - overlap
+    const circle2Pos = new Vec2(1, 1).normalize().scale(circlesDist)
+
+    const c2 = new Circle(circlesRadius, circle2Pos.x, circle2Pos.y, 1, 0)
+
+    const result = Collision.calculateSAT(c1, c2)
+
+    expect(result.depth).toBeCloseTo(overlap)
+    expect(result.normal.normalize().toArray()).toEqual(new Vec2(1, 1).normalize().toArray())
 })

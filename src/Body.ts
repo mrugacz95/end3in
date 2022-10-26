@@ -65,7 +65,7 @@ export abstract class Body {
             return
         }
         this.v = this.v.sub(new Vec2(P.x * this.massInv, P.y * this.massInv))
-        this.omega -= this.inertiaInv * r.cross(P);
+        // this.omega -= this.inertiaInv * r.cross(P);
     };
 
     abstract isInside(point: Vec2): boolean
@@ -151,9 +151,10 @@ export class Rectangle extends Polygon {
 
 export class Circle extends Body {
     radius: number;
-    constructor(x: number, y: number, radius: number, mass: number) {
+
+    constructor(radius: number,x: number, y: number, mass: number, isStatic :boolean) {
         const inertia = 2 / (mass * radius * radius);
-        super(x, y, mass, inertia);
+        super(x, y, mass, inertia, isStatic);
         this.radius = radius;
     }
 
