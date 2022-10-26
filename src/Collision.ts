@@ -43,9 +43,9 @@ export class Collision {
         return {min: min, max: max, minPoint: minPoint, maxPoint: maxPoint};
     }
 
-    static calculateSAT(body1: Body, body2: Body): CollisionManifold {
+    static calculateSAT(body1: Body, body2: Body): MTV {
 
-        let collisionManifold: CollisionManifold = undefined
+        let collisionManifold: MTV = undefined
 
         if (body1 instanceof Circle) {
             if (body2 instanceof Polygon) {
@@ -69,13 +69,6 @@ export class Collision {
             }
         } else {
             throw new Error(`Colliding ${body1} with ${body2} is not implemented yet`)
-        }
-
-        if (collisionManifold) {
-            const contactPoints : Vec2[] = ContactPoints.getContactPoints(body1, body2)
-            collisionManifold.contact1 = contactPoints[0]
-            collisionManifold.contact2 = contactPoints[1]
-            collisionManifold.contactCount = contactPoints.length
         }
 
         return collisionManifold
@@ -113,18 +106,15 @@ export class Collision {
         if (body1.pos.sub(body2.pos).dot(collisionNormal) > 0) {
             collisionNormal = collisionNormal.inv()
         }
-        return new CollisionManifold(
+        return new MTV(
             body1,
             body2,
             collisionNormal,
             depth,
-            Vec2.ZERO,
-            Vec2.ZERO,
-            0
         )
     }
 
-    private static intersectCirclePolygon(circle: Circle, polygon: Polygon): CollisionManifold {
+    private static intersectCirclePolygon(circle: Circle, polygon: Polygon): MTV {
         let returnedNormal: Vec2 = null
         let returnedDepth: number = Number.MAX_VALUE
 
@@ -168,14 +158,11 @@ export class Collision {
         if (circle.pos.sub(polygon.pos).dot(returnedNormal) > 0) {
             returnedNormal = returnedNormal.inv()
         }
-        return new CollisionManifold(
+        return new MTV(
             circle,
             polygon,
             returnedNormal,
             returnedDepth,
-            Vec2.ZERO,
-            Vec2.ZERO,
-            0
         )
     }
 
@@ -210,18 +197,34 @@ export class Collision {
             normal = normal.inv()
         }
 
-        return new CollisionManifold(
+        return new MTV(
             circle1,
             circle2,
             normal,
             depth,
-            Vec2.ZERO,
-            Vec2.ZERO,
-            0
         )
     }
 
 }
+
+export class MTV {
+    /**
+     * Minimum translation vector
+     */
+    body1: Body;
+    body2: Body;
+    normal: Vec2;
+    depth: number;
+
+    constructor(body1: Body, body2: Body, normal: Vec2, depth: number) {
+        this.body1 = body1;
+        this.body2 = body2;
+        this.normal = normal;
+        this.depth = depth;
+    }
+
+}
+
 
 export class CollisionManifold {
     body1: Body;
@@ -232,20 +235,15 @@ export class CollisionManifold {
     contact2: Vec2;
     contactCount: number;
 
-    constructor(body1: Body,
-                body2: Body,
-                normal: Vec2,
-                depth: number,
-                contact1: Vec2,
-                contact2: Vec2,
-                contactCount: number) {
-        this.body1 = body1;
-        this.body2 = body2;
-        this.normal = normal;
-        this.depth = depth;
-        this.contact1 = contact1;
-        this.contact2 = contact2;
-        this.contactCount = contactCount;
+    constructor(mtv: MTV,
+                contactPoints: ContactPoints) {
+        this.body1 = mtv.body1;
+        this.body2 = mtv.body2;
+        this.normal = mtv.normal;
+        this.depth = mtv.depth;
+        this.contact1 = contactPoints.contactPoint1;
+        this.contact2 = contactPoints.contactPoint2;
+        this.contactCount = contactPoints.contactCount;
     }
 
 }

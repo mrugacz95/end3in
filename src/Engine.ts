@@ -1,7 +1,8 @@
-import { Body, Circle } from "./Body";
+import { Body } from "./Body";
 import { Vec2 } from "./Vector"
-import { Collision, CollisionManifold } from "./Collision";
+import { Collision, CollisionManifold, MTV } from "./Collision";
 import { Solver } from "./Solver";
+import { ContactPoints } from "./ContactPoints";
 
 export class Engine {
     solver: Solver;
@@ -34,9 +35,7 @@ export class Engine {
                     obj.applyAcceleration(new Vec2(0, this.g), 0, this.dt / this.iterations);
                 }
             }
-            if (this.solver === 'impulse') {
-                this.impulseSolver();
-            } else if (this.solver === 'translation') {
+            if (this.solver === 'translation') {
                 this.translationSolver();
             }
             for (let obj of this.gameObjects) {
@@ -56,6 +55,14 @@ export class Engine {
     };
 
     translationSolver() {
+        const broadColliding = this.broadPhrase()
+        this.narrowPhrase(broadColliding)
+
+
+    }
+
+    broadPhrase(): number[][] {
+        let collidingBodies: number[][] = []
         for (let i = 0; i < this.gameObjects.length; i++) {
             for (let j = i + 1; j < this.gameObjects.length; j++) {
                 const body1 = this.gameObjects[i]
@@ -66,24 +73,36 @@ export class Engine {
                 if (!Collision.areAABBColliding(body1, body2)) {
                     continue;
                 }
-                let collisionManifold = Collision.calculateSAT(body1, body2);
-                if (collisionManifold) {
-                    if (body2.isStatic) {
-                        body1.pos = body1.pos.add(collisionManifold.normal.normalize().scale(-collisionManifold.depth))
-                    } else if (body1.isStatic) {
-                        body2.pos = body2.pos.add(collisionManifold.normal.normalize().scale(collisionManifold.depth))
-                    } else {
-                        body2.pos = body2.pos.add(collisionManifold.normal.normalize().scale(collisionManifold.depth / 2))
-                        body1.pos = body1.pos.add(collisionManifold.normal.normalize().scale(-collisionManifold.depth / 2))
-                    }
+                collidingBodies.push([i, j])
+            }
+        }
+        return collidingBodies
+    }
 
-                    this.resolveCollision(body1, body2, collisionManifold)
-                }
+    narrowPhrase(broadColliding: number[][]) {
+        for (let [body1idx, body2idx] of broadColliding) {
+            const body1 = this.gameObjects[body1idx]
+            const body2 = this.gameObjects[body2idx]
+            let collisionMTV = Collision.calculateSAT(body1, body2);
+            if (collisionMTV !== undefined) {
+                this.separateBodies(collisionMTV)
+                let contactPoints = new ContactPoints(body1, body2)
+                const collisionManifold = new CollisionManifold(
+                    collisionMTV,
+                    contactPoints
+                )
+                this.resolveCollision(collisionManifold)
             }
         }
     }
 
-    resolveCollision(body1: Body, body2: Body, collisionManifold: CollisionManifold) {
+
+    resolveCollision(collisionManifold: CollisionManifold) {
+        const body1: Body = collisionManifold.body1
+        const body2: Body = collisionManifold.body2
+
+
+
         const normal = collisionManifold.normal
 
         const relativeVelocity = body2.v.sub(body1.v);
@@ -103,56 +122,17 @@ export class Engine {
         body2.v = body2.v.add(impulse.scale(body2.massInv));
     }
 
-    impulseSolver() {
-        for (let i = 0; i < this.gameObjects.length; i++) {
-            for (let j = i + 1; j < this.gameObjects.length; j++) {
-                let body1 = this.gameObjects[i]
-                let body2 = this.gameObjects[j]
-                if (!Collision.areAABBColliding(body1, body2)) {
-                    continue;
-                }
-                if (body1 instanceof Circle && body1 instanceof Circle) { //TODO add more cases
-                    continue;
-                }
-                let collisionManifold = Collision.calculateSAT(body1, body2);
-                if (collisionManifold) {
-                    let incident = collisionManifold.body1;
-                    let reference = collisionManifold.body2;
-                    // V + omega × r
-                    let penetratingVelocity = collisionManifold.body1.v
-                        .add(collisionManifold.contact1
-                            .normal()
-                            .scale(collisionManifold.body2.omega))
-                        .cross(collisionManifold.normal);
-                    let referenceVelocity = collisionManifold.body2.v
-                        .add(collisionManifold.body2.v
-                            .normal()
-                            .scale(collisionManifold.body2.omega))
-                        .cross(collisionManifold.normal);
-
-                    let relativeVelocity = penetratingVelocity - referenceVelocity;
-                    let sign = Math.sign(relativeVelocity);
-                    relativeVelocity = Math.abs(relativeVelocity);
-
-                    let rn1 = collisionManifold.contact1.cross(collisionManifold.normal);
-                    let rn2 = collisionManifold.contact2.cross(collisionManifold.normal);
-
-                    let k = collisionManifold.body1.massInv + collisionManifold.body2.massInv;
-                    k += collisionManifold.body1.inertiaInv * (rn1 * rn1);
-                    k += collisionManifold.body2.inertiaInv * (rn2 * rn2);
-
-                    let slop = 0.02;
-                    let bias = 0.2 / this.dt * Math.max(collisionManifold.depth - slop, 0);
-                    let P = (relativeVelocity + sign * bias) / k;
-
-                    let Pvec = collisionManifold.normal.scale(P).normal();
-
-                    let refVector = Pvec.scale(sign);
-                    let indVector = Pvec.scale(-1 * sign);
-                    incident.applyImpulse(indVector, collisionManifold.contact1);
-                    reference.applyImpulse(refVector, collisionManifold.contact2);
-                }
-            }
+    separateBodies(mtv: MTV) {
+        let body1 = mtv.body1
+        let body2 = mtv.body2
+        let normal = mtv.normal.normalize()
+        if (body2.isStatic) {
+            body1.pos = body1.pos.add(normal.scale(-mtv.depth))
+        } else if (body1.isStatic) {
+            body2.pos = body2.pos.add(normal.scale(mtv.depth))
+        } else {
+            body2.pos = body2.pos.add(normal.scale(mtv.depth / 2))
+            body1.pos = body1.pos.add(normal.scale(-mtv.depth / 2))
         }
-    };
+    }
 }

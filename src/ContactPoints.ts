@@ -3,26 +3,34 @@ import { Vec2 } from "./Vector";
 import { Utils } from "./Utlis";
 
 export class ContactPoints {
-    static getContactPoints(body1: Body, body2: Body): Vec2[] {
+    contactPoint1 : Vec2 = null
+    contactPoint2 : Vec2 = null
+    contactCount = 0
+
+    constructor(body1: Body, body2: Body) {
+        let contactPoints : Vec2[]
         if (body1 instanceof Circle) {
             if (body2 instanceof Polygon) {
-                return ContactPoints.contactPointsCircleToPolygon(body1, body2)
+                contactPoints =  ContactPoints.contactPointsCircleToPolygon(body1, body2)
             } else if (body2 instanceof Circle) {
-                return ContactPoints.contactPointsCircleToCircle(body1, body2)
+                contactPoints =  ContactPoints.contactPointsCircleToCircle(body1, body2)
             } else {
                 throw new Error(`Contact points between circle and ${body2} is not implemented yet`)
             }
         } else if (body1 instanceof Polygon) {
             if (body2 instanceof Polygon) {
-                return ContactPoints.contactPointsPolygonToPolygon(body1, body2)
+                contactPoints =  ContactPoints.contactPointsPolygonToPolygon(body1, body2)
             } else if (body2 instanceof Circle) {
-                return ContactPoints.contactPointsCircleToPolygon(body2, body1)
+                contactPoints =  ContactPoints.contactPointsCircleToPolygon(body2, body1)
             } else {
                 throw new Error(`Contact points between polygon and ${body2} is not implemented yet`)
             }
         } else {
             throw new Error(`Contact points between ${body1} and ${body2} is not implemented yet`)
         }
+        this.contactPoint1 = contactPoints[0]
+        this.contactPoint2 = contactPoints[1]
+        this.contactCount = contactPoints.length
     }
 
     private static contactPointsCircleToCircle(circle1: Circle, circle2: Circle): Vec2[] {
@@ -84,5 +92,4 @@ export class ContactPoints {
                 return [closestPoint1, closestPoint2]
         }
     }
-
 }

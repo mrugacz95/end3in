@@ -1,5 +1,3 @@
-import { Utils } from "./Utlis";
-
 export class Vec2 {
     readonly x: number;
     readonly y: number;
@@ -79,7 +77,7 @@ export class Vec2 {
     }
 
     isCloseTo(other: Vec2){
-        return Utils.isCloseTo(this.x, other.x) && Utils.isCloseTo(this.y, other.y)
+        return this.sub(other).magnitude() < 0.0005 * 0.0005
     }
 
 }
