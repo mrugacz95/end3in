@@ -15,10 +15,12 @@
     const engine = new Engine();
     const rect1 = new Rectangle(0.5, 0.5, 3, 4, 1, true, 0.22);
     const rect2 = new Rectangle(1.0, 1.5, 5, 6, 1, true, Math.PI / 5);
-    const circle = new end3in.Circle(0.6, 2, 0.5, 1, true);
-    engine.addBody(rect1);
+    const circle1 = new end3in.Circle(0.6, 3.5, 2.5, 1, true);
+    const circle2 = new end3in.Circle(0.6, 2, 0.5, 1, true);
     engine.addBody(rect2);
-    engine.addBody(circle);
+    engine.addBody(circle1);
+    engine.addBody(circle2);
+    engine.addBody(rect1);
     engine.g = 0
     engine.start();
 
@@ -27,12 +29,20 @@
 
     document.onmousemove = function (event) {
         rect1.pos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY));
+        circle2.pos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY)).add(new Vec2(1.5, 0));
         if (Collision.areAABBColliding(rect1, rect2)) {
             rect1.color = "#e62131EE";
-        } else if (Collision.areAABBColliding(rect1, circle)) {
+        } else if (Collision.areAABBColliding(rect1, circle1)) {
             rect1.color = "rgba(20,230,23,0.93)";
         } else {
             rect1.color = "#141ae6EE";
+        }
+        if (Collision.areAABBColliding(circle2, rect2)) {
+            circle2.color = "#e62131EE";
+        } else if (Collision.areAABBColliding(circle2, circle1)) {
+            circle2.color = "rgba(20,230,23,0.93)";
+        } else {
+            circle2.color = "#141ae6EE";
         }
     }
 
