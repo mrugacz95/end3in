@@ -17,32 +17,48 @@
 
     let engine = new Engine(false, 'translation');
 
-    const obj = new Polygon([[-0.5, 1.0], [2.0, 1.0], [0.5, 0.0]], 0, 0, 50, false)
-    engine.addBody(obj)
+    const obj = new Polygon([[-0.5, 1.0], [2.0, 1.0], [0.5, 0.0]], 1, 1,  false)
+    obj.pos = new Vec2(-1, 0)
+    // engine.addBody(obj)
 
     for (let i = 0; i < 6; i++) {
-        engine.addBody(new Rectangle(0.5 + Math.random() * 0.1, 0.5 + Math.random() * 0.1, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 1, Math.random() >= 0.8));
-        engine.addBody(new Polygon([[0.0, 0.0], [0.5, 0.0], [0.3, -0.8]], (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 1, Math.random() >= 0.8));
-        engine.addBody(new Circle(Math.random() * 0.2 + 0.2, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 1, Math.random() >= 0.8));
+        const rect1 = new Rectangle(0.5, 0.5, 5, Math.random() >= 0.8)
+        rect1.pos = new Vec2((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5)
+        engine.addBody(rect1);
+        const polygon = new Polygon([[0.0, 0.0], [0.5, 0.0], [0.3, -0.8]], 1, 1, Math.random() >= 0.8)
+        polygon.pos = new Vec2((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5)
+        engine.addBody(polygon);
+        let circle = new Circle(Math.random() * 0.2 + 0.2, 1, Math.random() >= 0.8)
+        circle.pos = new Vec2((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5)
+        engine.addBody(circle);
     }
-    engine.addBody(new Rectangle(7, 1, -0, 4, 1, true));
+    let ground = new Rectangle(10, 1, 1, true)
+    ground.pos = new Vec2(0, 4)
+    engine.addBody(ground);
+
+
+    let slide = new Rectangle(5, 0.5, 1, true)
+    slide.pos = new Vec2(-2, 0)
+    slide.rot = Math.PI / 7
+    engine.addBody(slide);
+
     engine.start();
 
-    const graphics = new Graphics({width: 1500, height: 1500, engine: engine, debug: true, cameraPos: new Vec2(4, 4)})
+    const graphics = new Graphics({width: 2000, height: 1500, engine: engine, debug: true, scale: 50, cameraPos: new Vec2(6, 4)})
     graphics.start()
 
     document.addEventListener("keydown", event => {
         if (event.isComposing || event.code === 'ArrowUp') {
-            obj.applyImpulse(new Vec2(0, 5), Vec2.ZERO)
+            obj.applyImpulse(new Vec2(0, 5))
         }
         if (event.isComposing || event.code === 'ArrowDown') {
-            obj.applyImpulse(new Vec2(0, -5), Vec2.ZERO)
+            obj.applyImpulse(new Vec2(0, -5))
         }
         if (event.isComposing || event.code === 'ArrowLeft') {
-            obj.applyImpulse(new Vec2(5, 0), Vec2.ZERO)
+            obj.applyImpulse(new Vec2(5, 0))
         }
         if (event.isComposing || event.code === 'ArrowRight') {
-            obj.applyImpulse(new Vec2(-5, 0), Vec2.ZERO)
+            obj.applyImpulse(new Vec2(-5, 0))
         }
     });
 </script>

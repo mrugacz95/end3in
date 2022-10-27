@@ -3,26 +3,34 @@ import { Vec2 } from "./Vector";
 import { Utils } from "./Utlis";
 
 export class ContactPoints {
-    static getContactPoints(body1: Body, body2: Body): Vec2[] {
+    contactPoint1 : Vec2 = null
+    contactPoint2 : Vec2 = null
+    contactCount = 0
+
+    constructor(body1: Body, body2: Body) {
+        let contactPoints : Vec2[]
         if (body1 instanceof Circle) {
             if (body2 instanceof Polygon) {
-                return ContactPoints.contactPointsCircleToPolygon(body1, body2)
+                contactPoints =  ContactPoints.contactPointsCircleToPolygon(body1, body2)
             } else if (body2 instanceof Circle) {
-                return ContactPoints.contactPointsCircleToCircle(body1, body2)
+                contactPoints =  ContactPoints.contactPointsCircleToCircle(body1, body2)
             } else {
                 throw new Error(`Contact points between circle and ${body2} is not implemented yet`)
             }
         } else if (body1 instanceof Polygon) {
             if (body2 instanceof Polygon) {
-                return ContactPoints.contactPointsPolygonToPolygon(body1, body2)
+                contactPoints =  ContactPoints.contactPointsPolygonToPolygon(body1, body2)
             } else if (body2 instanceof Circle) {
-                return ContactPoints.contactPointsCircleToPolygon(body2, body1)
+                contactPoints =  ContactPoints.contactPointsCircleToPolygon(body2, body1)
             } else {
                 throw new Error(`Contact points between polygon and ${body2} is not implemented yet`)
             }
         } else {
             throw new Error(`Contact points between ${body1} and ${body2} is not implemented yet`)
         }
+        this.contactPoint1 = contactPoints[0]
+        this.contactPoint2 = contactPoints[1]
+        this.contactCount = contactPoints.length
     }
 
     private static contactPointsCircleToCircle(circle1: Circle, circle2: Circle): Vec2[] {
@@ -35,7 +43,7 @@ export class ContactPoints {
         let minDist = Number.MAX_VALUE
         let closestPoint: Vec2 = undefined
 
-        for (let axisWithPoints of polygon.transformedAxes) {
+        for (const axisWithPoints of polygon.transformedAxes) {
             const newClosest = Utils.closestPointOnSegment(circle.pos, axisWithPoints.p1, axisWithPoints.p2)
 
             const newDist = newClosest.sub(circle.pos).magnitude()
@@ -55,9 +63,9 @@ export class ContactPoints {
         let closestPoint2: Vec2 = undefined
         let contactCount = 0
 
-        for (let [polygon1, polygon2] of [[body1, body2], [body2, body1]]) {
-            for (let point of polygon1.transformedPoints) {
-                for (let axis of polygon2.transformedAxes) {
+        for (const [polygon1, polygon2] of [[body1, body2], [body2, body1]]) {
+            for (const point of polygon1.transformedPoints) {
+                for (const axis of polygon2.transformedAxes) {
                     const newClosest = Utils.closestPointOnSegment(point, axis.p1, axis.p2)
                     const distSq = newClosest.sub(point).magnitude()
 
@@ -84,5 +92,4 @@ export class ContactPoints {
                 return [closestPoint1, closestPoint2]
         }
     }
-
 }
