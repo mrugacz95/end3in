@@ -12,18 +12,21 @@
         Rectangle = end3in.Rectangle,
         Circle = end3in.Circle,
         Collision = end3in.Collision,
+        ContactPoints = end3in.ContactPoints,
         Graphics = end3in.Graphics,
         Vec2 = end3in.Vec2;
     const engine = new Engine();
     engine.scale = 100;
-    const mouseRect = new Rectangle(0.5, 0.5, 1, 2, 1, true);
-    const rect2 = new Rectangle(1.0, 1.5, 2, 2.5, 1, true);
-    const circle1 = new end3in.Circle(0.3, 1, 0.5, 1, true);
-    const mouseCircle = new end3in.Circle(0.6, 2, 0.5, 1, true);
+    const mouseRect = new Rectangle(0.5, 0.5, 1, true);
+    const rect2 = new Rectangle(1.0, 1.5, 1, true);
+    rect2.pos = new Vec2(2, 2.5)
+    const circle1 = new end3in.Circle(0.3, 1, true);
+    circle1.pos = new Vec2(1, 0.5)
+    const mouseCircle = new end3in.Circle(0.6, 1, true);
     engine.addBody(mouseRect);
+    engine.addBody(mouseCircle);
     engine.addBody(rect2);
     engine.addBody(circle1);
-    engine.addBody(mouseCircle);
     engine.start();
 
     const graphics = new Graphics({width: 1000, height: 1000, engine: engine, debug: true, scale: 60, cameraPos: new Vec2(6, 6)})
@@ -46,14 +49,15 @@
         function collide(body1, body2) {
             let collision = Collision.calculateSAT(body1, body2)
             if (collision) {
-                switch (collision.contactCount) {
+                let cp = new ContactPoints(body1, body2)
+                switch (cp.contactCount) {
                     case 1: {
-                        drawContactPoint(collision.contact1)
+                        drawContactPoint(cp.contactPoint1)
                         break
                     }
                     case 2: {
-                        drawContactPoint(collision.contact1)
-                        drawContactPoint(collision.contact2)
+                        drawContactPoint(cp.contactPoint1)
+                        drawContactPoint(cp.contactPoint2)
                         break
                     }
                 }

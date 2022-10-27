@@ -43,7 +43,7 @@ export class ContactPoints {
         let minDist = Number.MAX_VALUE
         let closestPoint: Vec2 = undefined
 
-        for (let axisWithPoints of polygon.transformedAxes) {
+        for (const axisWithPoints of polygon.transformedAxes) {
             const newClosest = Utils.closestPointOnSegment(circle.pos, axisWithPoints.p1, axisWithPoints.p2)
 
             const newDist = newClosest.sub(circle.pos).magnitude()
@@ -63,9 +63,9 @@ export class ContactPoints {
         let closestPoint2: Vec2 = undefined
         let contactCount = 0
 
-        for (let [polygon1, polygon2] of [[body1, body2], [body2, body1]]) {
-            for (let point of polygon1.transformedPoints) {
-                for (let axis of polygon2.transformedAxes) {
+        for (const [polygon1, polygon2] of [[body1, body2], [body2, body1]]) {
+            for (const point of polygon1.transformedPoints) {
+                for (const axis of polygon2.transformedAxes) {
                     const newClosest = Utils.closestPointOnSegment(point, axis.p1, axis.p2)
                     const distSq = newClosest.sub(point).magnitude()
 

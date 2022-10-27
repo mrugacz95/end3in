@@ -5,7 +5,7 @@ import { ContactPoints } from "./ContactPoints";
 export class Collision {
     static areAABBColliding(body1: Body, body2: Body) {
         return body1.AABB.collides(body2.AABB)
-    };
+    }
 
     private static projectCircle(normal: Vec2, body1: Circle) {
         const directionRadius = normal.normalize().scale(body1.radius)
@@ -29,8 +29,8 @@ export class Collision {
         let max = -Number.MAX_VALUE;
         let minPoint;
         let maxPoint;
-        for (let point of body.transformedPoints) {
-            let projection = point.dot(axis);
+        for (const point of body.transformedPoints) {
+            const projection = point.dot(axis);
             if (min > projection) {
                 min = projection;
                 minPoint = point;
@@ -77,22 +77,20 @@ export class Collision {
     private static intersectPolygons(body1: Polygon, body2: Polygon) {
         let collisionNormal = null;
         let depth = Number.MAX_VALUE;
-        for (let body of [body1, body2]) {
-            for (let axisWithPoints of body.transformedAxes) {
-                let axis = axisWithPoints.axis;
+        for (const body of [body1, body2]) {
+            for (const axisWithPoints of body.transformedAxes) {
+                const axis = axisWithPoints.axis;
 
-                let normal = axis.normalize().normal();
-                let bProj = Collision.projectPolygon(normal, body1);
-                let oProj = Collision.projectPolygon(normal, body2);
+                const normal = axis.normalize().normal();
+                const bProj = Collision.projectPolygon(normal, body1);
+                const oProj = Collision.projectPolygon(normal, body2);
 
                 // check overlap
                 if (bProj.max <= oProj.min ||
                     bProj.min >= oProj.max) {
                     return undefined
                 }
-                let overlap = 0;
-
-                overlap = Math.min(
+                const overlap = Math.min(
                     bProj.max - oProj.min,
                     oProj.max - bProj.min
                 )
@@ -118,9 +116,9 @@ export class Collision {
         let returnedNormal: Vec2 = null
         let returnedDepth: number = Number.MAX_VALUE
 
-        for (let axisWithPoints of polygon.transformedAxes) {
-            let axis = axisWithPoints.axis
-            let normal = axis.normal().normalize()
+        for (const axisWithPoints of polygon.transformedAxes) {
+            const axis = axisWithPoints.axis
+            const normal = axis.normal().normalize()
 
             const cProj = Collision.projectCircle(normal, circle)
             const pProj = Collision.projectPolygon(normal, polygon)
@@ -138,8 +136,8 @@ export class Collision {
             }
         }
 
-        let closestPoint = Collision.closestPointOnPolygon(circle.pos, polygon)
-        let normal = closestPoint.sub(circle.pos).normal().normalize()
+        const closestPoint = Collision.closestPointOnPolygon(circle.pos, polygon)
+        const normal = closestPoint.sub(circle.pos).normal().normalize()
 
         const cProj = Collision.projectCircle(normal, circle)
         const pProj = Collision.projectPolygon(normal, polygon)
@@ -170,10 +168,11 @@ export class Collision {
         let closestPoint = polygon.transformedPoints[0]
         let dist = Number.MAX_VALUE
 
-        for (let polygonPoint of polygon.transformedPoints) {
-            let newDist = polygonPoint.distance(point)
+        for (const polygonPoint of polygon.transformedPoints) {
+            const newDist = polygonPoint.distance(point)
+
             if (newDist < dist) {
-                newDist = dist
+                dist = newDist
                 closestPoint = polygonPoint
             }
         }
@@ -190,8 +189,7 @@ export class Collision {
         }
 
         let normal = circle1.pos.sub(circle2.pos)
-        let depth = radiusSum - dist
-
+        const depth = radiusSum - dist
 
         if (circle1.pos.sub(circle2.pos).dot(normal) > 0) {
             normal = normal.inv()

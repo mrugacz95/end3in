@@ -8,14 +8,14 @@ export class Utils {
             color += letters[Math.floor(Math.random() * 16)];
         }
         return color;
-    };
+    }
 
     static closestPointOnSegment(point: Vec2, a: Vec2, b: Vec2): Vec2 {
-        let ab = b.sub(a)
-        let ap = point.sub(a)
-        let proj = ab.dot(ap)
-        let abLenSq = ab.magnitude()
-        let d = proj / abLenSq
+        const ab = b.sub(a)
+        const ap = point.sub(a)
+        const proj = ab.dot(ap)
+        const abLenSq = ab.magnitude()
+        const d = proj / abLenSq
 
         let closestPoint: Vec2
 

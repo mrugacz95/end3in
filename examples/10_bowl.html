@@ -13,18 +13,21 @@
         Vec2 = end3in.Vec2;
     Graphics = end3in.Graphics;
 
-    const bowlB = new Rectangle(4.3, 1.6,
-        2, 5.0, 1, true, 0);
-    const bowlL = new Rectangle(3, 2,
-        -0.5, 4, 1, true, Math.PI / 4);
-    const bowlR = new Rectangle(3, 2,
-        4.5, 4, 1, true, -Math.PI / 4);
+    const bowlB = new Rectangle(4.3, 1.6, 1, true);
+    bowlB.pos = new Vec2(2, 5.0)
+    const bowlL = new Rectangle(3, 2, 1, true);
+    bowlL.pos = new Vec2(-0.5, 4)
+    bowlL.rot = Math.PI / 4
+    const bowlR = new Rectangle(3, 2, 1, true, -Math.PI / 4);
+    bowlR.pos = new Vec2(4.5, 4)
+    bowlR.rot = -Math.PI / 4
     const gameObjects = [];
     for (let i = 0; i < 6; i++) {
-        gameObjects.push(new RegularPolygon(8, 0.5, -0.5 + i, 2, 1))
+        const regular = new RegularPolygon(8, 0.5, 1)
+        gameObjects.push(regular)
     }
     for (let i = 0; i < 6; i++) {
-        gameObjects.push(new end3in.Circle(0.5, -0.5 + i, 0, 1))
+        gameObjects.push(new end3in.Circle(0.5, 1))
     }
 
     engine.addBody(bowlB);
@@ -39,11 +42,11 @@
     function setup() {
         for (let i = 0; i < gameObjects.length / 2; i++) {
             gameObjects[i].pos = new Vec2(-0.5 + i, 2);
-            gameObjects[i].omega = 0;
+            gameObjects[i].omega = -Math.PI / 4
             gameObjects[i].v = new Vec2(0, 0);
         }
         for (let i = gameObjects.length / 2; i < gameObjects.length; i++) {
-            gameObjects[i].pos = new Vec2(-0.5 + i -  gameObjects.length / 2, 0);
+            gameObjects[i].pos = new Vec2(-0.5 + i - gameObjects.length / 2, 0);
             gameObjects[i].omega = 0;
             gameObjects[i].v = new Vec2(Math.random() * 0.0001, Math.random() * 0.0001);
         }

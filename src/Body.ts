@@ -3,10 +3,10 @@ import { Utils } from "./Utlis";
 import { AABB } from "./AABB";
 
 export abstract class Body {
-    pos: Vec2 = Vec2.ZERO;
-    rot: number = 0;
-    v: Vec2 = Vec2.ZERO;
-    omega: number;
+    protected _pos = Vec2.ZERO;
+    protected _rot = 0;
+    v = Vec2.ZERO;
+    omega = 0;
     readonly isStatic: boolean;
     readonly massInv: number;
     readonly inertiaInv: number;
@@ -27,8 +27,8 @@ export abstract class Body {
     protected constructor(
         mass: number,
         inertia: number,
-        isStatic: boolean = false,
-        restitution: number = 0.5,
+        isStatic = false,
+        restitution = 0.3,
         color: string = Utils.randomColor()) {
         this.isStatic = isStatic;
         if (this.isStatic) {
@@ -47,34 +47,35 @@ export abstract class Body {
     }
 
     update(dt: number) {
-        this.pos = this.pos.add(this.v.scale(dt))
-        // this.rot += this.omega * dt;
-        this.transformUpdateRequired = true;
-        this._cachedAABB = null
-    };
-
-    applyForce(fx: number, fy: number, px: number, py: number, dt: number) {
-        px = px - this.pos.x;
-        py = py - this.pos.y;
-        let tau = px * fy - py * fx;
-        let ax = fx * this.massInv;
-        let ay = fy * this.massInv;
-        this.applyAcceleration(new Vec2(ax, ay), tau, dt)
-    };
-
-    applyAcceleration(a: Vec2, tau: number, dt: number) {
-        let alpha = tau * this.inertiaInv;
-        this.v = this.v.add(a.scale(dt))
-        this.omega += alpha * dt;
-    };
-
-    applyImpulse(P: Vec2, r: Vec2) {
-        if (this.isStatic) {
+        if (this.isStatic){
             return
         }
-        this.v = this.v.sub(new Vec2(P.x * this.massInv, P.y * this.massInv))
-        // this.omega -= this.inertiaInv * r.cross(P);
-    };
+        this.pos = this.pos.add(this.v.scale(dt))
+        this.rot += this.omega * dt;
+        this.transformUpdateRequired = true;
+        this._cachedAABB = null
+    }
+
+    applyAcceleration(a: Vec2, dt: number) {
+        this.v = this.v.add(a.scale(dt))
+    }
+
+    get pos(): Vec2{
+        return this._pos
+    }
+    set pos(value: Vec2){
+        this._pos = value
+        this.transformUpdateRequired = true
+    }
+
+    get rot(): number{
+        return this._rot
+    }
+    set rot(value: number){
+        this._rot = value
+        this.transformUpdateRequired = true
+    }
+
 
     abstract isInside(point: Vec2): boolean
 }
@@ -89,7 +90,7 @@ export class Polygon extends Body {
         const vertices = points.map(p => new Vec2(p[0], p[1]));
         const meanX = vertices.map((o) => o.x).reduce((p, c) => p + c, 0) / points.length;
         const meanY = vertices.map((o) => o.y).reduce((p, c) => p + c, 0) / points.length;
-        for (let point of vertices) {
+        for (const point of vertices) {
             this.points.push(new Vec2(point.x - meanX, point.y - meanY));
         }
     }
@@ -99,25 +100,25 @@ export class Polygon extends Body {
             return this._transformedPoints
         }
         for (let i = 0; i < this.points.length; i++) {
-            this._transformedPoints[i] = this.points[i].rotate(this.rot).add(this.pos)
+            this._transformedPoints[i] = this.points[i].rotate(this._rot).add(this.pos)
         }
         this.transformUpdateRequired = false;
         return this._transformedPoints;
-    };
+    }
 
     get transformedAxes() {
-        let result = [];
+        const result = [];
         for (let i = 0; i < this.transformedPoints.length; i++) {
-            let first = this.transformedPoints[i];
-            let second = this.transformedPoints[(i + 1) % this.transformedPoints.length];
+            const first = this.transformedPoints[i];
+            const second = this.transformedPoints[(i + 1) % this.transformedPoints.length];
             result.push({axis: second.sub(first), p1: first, p2: second})
         }
         return result;
-    };
+    }
 
     isInside(point: Vec2): boolean {
-        for (let a of this.transformedAxes) {
-            let d = a.axis.cross(a.p2.sub(point));
+        for (const a of this.transformedAxes) {
+            const d = a.axis.cross(a.p2.sub(point));
             if (d > 0) return false;
         }
         return true;
@@ -128,7 +129,7 @@ export class Polygon extends Body {
             maxX = -Number.MAX_VALUE,
             maxY = -Number.MAX_VALUE,
             minY = Number.MAX_VALUE;
-        for (let p of this.transformedPoints) {
+        for (const p of this.transformedPoints) {
             minX = Math.min(minX, p.x)
             maxX = Math.max(maxX, p.x);
             minY = Math.min(minY, p.y);
@@ -140,15 +141,15 @@ export class Polygon extends Body {
 
 export class RegularPolygon extends Polygon {
     constructor(num_of_vertices: number, radius: number, mass: number, isStatic: boolean) {
-        let points = [];
+        const points = [];
         for (let i = num_of_vertices - 1; i >= 0; i--) {
-            let pos_x = Math.cos(2.0 * Math.PI / num_of_vertices * i) * radius;
-            let pos_y = Math.sin(2.0 * Math.PI / num_of_vertices * i) * radius;
+            const pos_x = Math.cos(2.0 * Math.PI / num_of_vertices * i) * radius;
+            const pos_y = Math.sin(2.0 * Math.PI / num_of_vertices * i) * radius;
             points.push([pos_x, pos_y])
         }
         const inertia = 1 / 2 * mass * radius * radius * (1 - 2 / 3 * Math.sin(Math.PI / num_of_vertices) * Math.sin(Math.PI / num_of_vertices))
         super(points, mass, inertia, isStatic)
-    };
+    }
 }
 
 export class Rectangle extends Polygon {
@@ -176,10 +177,10 @@ export class Circle extends Body {
     }
 
     get _AABB(): AABB {
-        let minX = this.pos.x - this.radius;
-        let maxX = this.pos.x + this.radius;
-        let minY = this.pos.y - this.radius;
-        let maxY = this.pos.y + this.radius;
+        const minX = this.pos.x - this.radius;
+        const maxX = this.pos.x + this.radius;
+        const minY = this.pos.y - this.radius;
+        const maxY = this.pos.y + this.radius;
         return new AABB(minX, minY, maxX, maxY)
     }
 }

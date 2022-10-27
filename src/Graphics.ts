@@ -33,8 +33,7 @@ export class Graphics {
             debug = false,
             scale = 60,
             cameraPos = new Vec2(3, 3),
-            clickCallback = ((_: Vec2) => {
-            })
+            clickCallback = null
         }: GraphicsParameters) {
         this.width = width
         this.height = height
@@ -42,12 +41,7 @@ export class Graphics {
         this.debug = debug
         this.canvas = document.createElement('canvas')
         document.body.appendChild(this.canvas)
-        let self = this
-        document.addEventListener("click",
-            function (event) {
-                let worldPos = self.clientToWorldPos(new Vec2(event.clientX, event.clientY))
-                clickCallback(worldPos)
-            });
+        this.addClickCallback(clickCallback)
         this.ctx = this.canvas.getContext('2d');
         this.scale = scale;
         this.cameraPos = cameraPos;
@@ -61,16 +55,15 @@ export class Graphics {
     start() {
         this.started = true;
         this.setInterval()
-    };
+    }
 
     setInterval() {
         if (!this.started) {
             return
         }
-        const self = this;
-        setTimeout(function () {
-            self.drawBodies(self.engine.gameObjects)
-            self.setInterval()
+        setTimeout(() => {
+            this.drawBodies(this.engine.gameObjects)
+            this.setInterval()
         }, 1000 * this.dt);
     }
 
@@ -83,7 +76,7 @@ export class Graphics {
         this.ctx.save();
         this.ctx.scale(this.scale, this.scale);
         this.ctx.translate(this.cameraPos.x, this.cameraPos.y);
-        for (let body of bodies) {
+        for (const body of bodies) {
             this.drawBody(body, this.debug)
         }
         this.ctx.restore()
@@ -93,27 +86,24 @@ export class Graphics {
         this.ctx.fillStyle = "#FFFFFF";
         this.ctx.fillRect(0, 0, this.width, this.height);
         this.ctx.fillStyle = "#000000";
-    };
+    }
 
     drawBody(body: Body, debug: boolean) {
         if (body instanceof Polygon) {
             this.ctx.beginPath();
-            for (let i = 0; i < body.points.length + 1; i++) {
-                let next = body.points[i % body.points.length]
-                    .rotate(body.rot)
-                    .transpose(body.pos.x, body.pos.y);
-                if (i === 0) {
-                    this.ctx.moveTo(next.x, next.y);
-                } else {
-                    this.ctx.lineTo(next.x, next.y)
+            const axes = body.transformedAxes
+            for (let i = 0; i < axes.length; i++) {
+                if (i == 0) {
+                    this.ctx.moveTo(axes[i].p1.x, axes[i].p1.y);
                 }
+                this.ctx.lineTo(axes[i].p2.x, axes[i].p2.y)
             }
             this.ctx.fillStyle = body.color;
             this.ctx.fill();
             if (debug) {
-                for (let axis of body.transformedAxes) {
-                    let mid = axis.axis.scale(0.5).add(axis.p1);
-                    let norm = axis.axis.normal();
+                for (const axis of body.transformedAxes) {
+                    const mid = axis.axis.scale(0.5).add(axis.p1);
+                    const norm = axis.axis.normal();
                     this.ctx.lineWidth = 1 / this.scale;
                     this.ctx.strokeStyle = "#7a7a7a";
                     this.ctx.beginPath();
@@ -129,6 +119,23 @@ export class Graphics {
             this.ctx.beginPath();
             this.ctx.arc(body.pos.x, body.pos.y, body.radius, 0, 2 * Math.PI);
             this.ctx.fill();
+
+            this.ctx.strokeStyle = "#7a7a7a";
+            this.ctx.lineWidth = 3 / this.scale;
+            this.ctx.beginPath();
+            this.ctx.moveTo(body.pos.x, body.pos.y);
+            const radius = body.pos.add(new Vec2(1, 0).rotate(body.rot).scale(body.radius))
+            this.ctx.lineTo(radius.x, radius.y);
+            this.ctx.stroke()
+        }
+    }
+
+    addClickCallback(clickCallback?: ((_: Vec2) => void)) {
+        if (clickCallback) {
+            document.addEventListener("click", (event: MouseEvent) => {
+                const worldPos = this.clientToWorldPos(new Vec2(event.clientX, event.clientY))
+                clickCallback(worldPos)
+            });
         }
     }
 

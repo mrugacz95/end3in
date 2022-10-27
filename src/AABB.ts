@@ -1,8 +1,8 @@
 export class AABB {
-    private minX: number;
-    private minY: number;
-    private maxX: number;
-    private maxY: number;
+    private readonly minX: number;
+    private readonly minY: number;
+    private readonly maxX: number;
+    private readonly maxY: number;
 
     constructor(minX: number, minY: number, maxX: number, maxY: number) {
         this.minX = minX;
