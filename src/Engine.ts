@@ -1,19 +1,16 @@
 import { Body } from "./Body";
 import { Vec2 } from "./Vector"
 import { Collision, CollisionManifold, MTV } from "./Collision";
-import { Solver } from "./Solver";
 import { ContactPoints } from "./ContactPoints";
 
 export class Engine {
-    solver: Solver;
     dt: number;
     debug: boolean;
     gameObjects: Body[];
     g: number;
     iterations: number;
 
-    constructor(debug = false, solver: Solver, iterations = 35) {
-        this.solver = solver;
+    constructor(debug = false, iterations = 35) {
         this.dt = 1 / 60; // take dt from elapsed time
         this.debug = debug;
         this.g = 9.81;
@@ -34,9 +31,7 @@ export class Engine {
                     obj.applyAcceleration(new Vec2(0, this.g), this.dt / this.iterations);
                 }
             }
-            if (this.solver === 'translation') {
-                this.translationSolver();
-            }
+            this.translationSolver();
             for (const obj of this.gameObjects) {
                 obj.update(this.dt / this.iterations);
             }
@@ -56,8 +51,6 @@ export class Engine {
     translationSolver() {
         const broadColliding = this.broadPhrase()
         this.narrowPhrase(broadColliding)
-
-
     }
 
     broadPhrase(): number[][] {
@@ -172,7 +165,5 @@ export class Engine {
             body2.v = body2.v.add(impulse.scale(body2.massInv));
             body2.omega = body2.omega + r2.cross(impulse) * body2.inertiaInv
         }
-
-
     }
 }

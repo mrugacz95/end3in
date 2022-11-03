@@ -17,21 +17,24 @@
     engine.g = 0;
 
     const gameObjects = [];
-    for (let i = 0; i < 6; i++) {
-        let obj = new Circle(0.5, -0.5 + i, 0.25);
-        gameObjects.push(obj)
+    for (let y = 0; y < 6; y++) {
+        for (let x = 0; x < 6; x++) {
+            let obj = new Circle(0.5, 1);
+            gameObjects.push(obj)
+        }
     }
-    engine.addAllBodies(gameObjects);
-    engine.start();
 
-    const graphics = new Graphics(1000, 1000, engine)
+    const graphics = new Graphics({width: 1000, height: 1000, engine: engine, cameraPos: new Vec2(2,2)})
     graphics.start()
 
     function setup() {
-        for (let i = 0; i < gameObjects.length; i++) {
-            gameObjects[i].pos = new Vec2(-0.5 + i, 2);
-            gameObjects[i].omega = 0;
-            gameObjects[i].v = new Vec2(Math.random(), Math.random());
+        for (let y = 0; y < 6; y++) {
+            for (let x = 0; x < 6; x++) {
+                let i = x + y * 6
+                gameObjects[i].pos = new Vec2(-0.5 + x, 0.25 + y)
+                gameObjects[i].omega = 0;
+                gameObjects[i].v = new Vec2(Math.random() - 0.5, Math.random() - 0.5).scale(5);
+            }
         }
     }
 
@@ -40,6 +43,35 @@
     document.onmousedown = function () {
         setup()
     }
+
+    function rollEdge() {
+        let maxPos = 12
+        let minPos = -2
+        for (let y = 0; y < 6; y++) {
+            for (let x = 0; x < 6; x++) {
+                let i = x + y * 6
+                let pos = gameObjects[i].pos
+                let d = Vec2.ZERO
+                if (pos.x < minPos) {
+                    d = new Vec2(maxPos, 0)
+                } else if (pos.x > maxPos) {
+                    d = new Vec2(-maxPos, 0)
+                } else if (pos.y < minPos) {
+                    d = new Vec2(0, maxPos)
+                } else if (pos.y > maxPos) {
+                    d = new Vec2(0, -maxPos)
+                }
+                gameObjects[i].pos = gameObjects[i].pos.add(d)
+            }
+        }
+    }
+
+    window.setInterval(() => {
+        rollEdge()
+    }, 200);
+
+    engine.addAllBodies(gameObjects);
+    engine.start();
 
 </script>
 </html>

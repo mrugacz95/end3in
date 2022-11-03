@@ -9,17 +9,25 @@
 </body>
 <script>
     const Engine = end3in.Engine;
+    Vec2 = end3in.Vec2;
     const engine = new Engine();
-    const rect1 = new end3in.Rectangle(0.5, 0.5, 3, 4);
+    const rect1 = new end3in.Rectangle(0.5, 0.5, 3, false);
     engine.addBody(rect1);
     engine.start();
 
     function applyForce(worldPosition) {
         const force = rect1.pos.sub(worldPosition).normalize();
-        rect1.applyForce(force.x, -force.y, worldPosition.x, worldPosition.y, 1000);
+        rect1.v = rect1.v.add(force.scale(7));
     }
 
-    const graphics = new end3in.Graphics(1000, 1000, engine, true,  60, applyForce)
+    const graphics = new end3in.Graphics({
+        width: 1000,
+        height: 1000,
+        engine: engine,
+        debug: true,
+        scale: 60,
+        clickCallback: applyForce
+    })
     graphics.start()
 
     function getDocumentOffsetPosition(el) {

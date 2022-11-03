@@ -14,19 +14,21 @@
         Graphics = end3in.Graphics,
         Vec2 = end3in.Vec2;
     let engine = new Engine();
-    const rect1 = new Polygon([[-1, -0.255], [1, -0.255], [0, 0.6]], 1, 2, 1, true);
-    const polygon2 = new Rectangle(2, 2,
-        3.3, 2.0, 1,  true, Math.PI / 6);
-    engine.addBody(rect1);
+    const polygon2 = new Rectangle(2, 2, 1,  true);
+    polygon2.pos = new Vec2(3.3, 2.0)
+    polygon2.rot = Math.PI / 6
     engine.addBody(polygon2);
     engine.start();
 
-    const graphics = new Graphics(1000, 1000, engine)
+    const graphics = new Graphics({
+        width: 1000,
+        height: 1000,
+        engine: engine,
+    })
     graphics.start()
 
     document.onmousemove = function (event) {
         const mousePos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY));
-        rect1.pos = mousePos
         if (polygon2.isInside(mousePos)) {
             polygon2.color = "#e62131EE";
         } else {
