@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shapes</title>
+    <script src="../build/end3in.js"></script>
+</head>
+<body></body>
+<script>
+    let engine = new end3in.Engine(debug = false);
+    const Rectangle = end3in.Rectangle,
+    Polygon = end3in.Polygon,
+        Circle = end3in.Circle,
+        RegularPolygon = end3in.RegularPolygon,
+        Vec2 = end3in.Vec2;
+    Graphics = end3in.Graphics;
+
+    const horizontal = new Rectangle(15, 0.2, 1, true);
+    horizontal.pos = new Vec2(2.3, 12)
+    engine.addBody(horizontal);
+
+    for (let i = 0; i < 18; i++) {
+        const regular = new Rectangle(0.2, 4.8, 1, true)
+        regular.pos = new Vec2(-1 + i * 0.4, 9.5)
+        engine.addBody(regular)
+        const top = new Polygon([[0.0, 0.0], [-0.1,0.2], [0.1, 0.2]], 1, 1, true)
+        top.pos = new Vec2(-1 + i * 0.4, 7.05)
+        engine.addBody(top)
+    }
+
+    for (let y = 0; y < 6; y++) {
+        for (let x = 0; x < 14; x++) {
+            const regular = new Circle(0.1, 1, true)
+            regular.pos = new Vec2(-1 + x * 0.5, 6.5 - y)
+            engine.addBody(regular)
+        }
+    }
+
+    for (let y = 0; y < 6; y++) {
+        for (let x = 0; x < 14; x++) {
+            const regular = new Circle(0.1, 1, true)
+            regular.pos = new Vec2(-0.75 + x * 0.5, 6 - y)
+            engine.addBody(regular)
+        }
+    }
+
+    let right = new Rectangle(0.2, 5, 1, true)
+    right.pos = new Vec2(4.95, -1)
+    right.rot = Math.PI / 3
+    engine.addBody(right)
+
+    let left = new Rectangle(0.2, 5, 1, true)
+    left.pos = new Vec2(0.05, -1)
+    left.rot = -Math.PI / 3
+    engine.addBody(left)
+
+    for (let y = 0; y < 5; y++) {
+        for (let x = 0; x < 13; x++) {
+            const regular = new Circle(0.1, 1, true)
+            regular.pos = new Vec2(-0.75 + x * 0.5, 5 - y)
+            engine.addBody(regular)
+        }
+    }
+
+    const gameObjects = [];
+
+
+    let positions = []
+    for (let y = 0; y < 11; y++) {
+        for (let x = 0; x < 15; x++) {
+            const regular = new Circle(0.1, 1, false)
+            gameObjects.push(regular)
+            positions.push(new Vec2(x * 0.2 + 1, y * 0.2 - 3))
+        }
+    }
+    engine.addAllBodies(gameObjects)
+
+
+    function setup() {
+        for (let i = 0; i < gameObjects.length; i++) {
+            gameObjects[i].pos = positions[i]
+            gameObjects[i].v = new Vec2(0,0)
+            gameObjects[i].omega = 0
+        }
+    }
+
+    setup();
+
+    document.onmousedown = function () {
+        setup()
+    }
+
+
+    const graphics = new Graphics({width: 800, height: 900, engine: engine})
+    graphics.start()
+
+    engine.start();
+
+</script>
+</html>

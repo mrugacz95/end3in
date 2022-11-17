@@ -47,7 +47,7 @@ export abstract class Body {
     }
 
     update(dt: number) {
-        if (this.isStatic){
+        if (this.isStatic) {
             return
         }
         this.pos = this.pos.add(this.v.scale(dt))
@@ -60,18 +60,20 @@ export abstract class Body {
         this.v = this.v.add(a.scale(dt))
     }
 
-    get pos(): Vec2{
+    get pos(): Vec2 {
         return this._pos
     }
-    set pos(value: Vec2){
+
+    set pos(value: Vec2) {
         this._pos = value
         this.transformUpdateRequired = true
     }
 
-    get rot(): number{
+    get rot(): number {
         return this._rot
     }
-    set rot(value: number){
+
+    set rot(value: number) {
         this._rot = value
         this.transformUpdateRequired = true
     }
@@ -119,7 +121,7 @@ export class Polygon extends Body {
     isInside(point: Vec2): boolean {
         for (const a of this.transformedAxes) {
             const d = a.axis.cross(a.p2.sub(point));
-            if (d > 0) return false;
+            if (d < 0) return false;
         }
         return true;
     }

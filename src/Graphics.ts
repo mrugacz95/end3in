@@ -40,6 +40,8 @@ export class Graphics {
         this.engine = engine
         this.debug = debug
         this.canvas = document.createElement('canvas')
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
         document.body.appendChild(this.canvas)
         this.addClickCallback(clickCallback)
         this.ctx = this.canvas.getContext('2d');
@@ -47,8 +49,6 @@ export class Graphics {
         this.cameraPos = cameraPos;
         this.width = 10 * this.scale;
         this.height = 10 * this.scale;
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
         this.dt = 1 / 60;
     }
 
@@ -84,7 +84,7 @@ export class Graphics {
 
     clear() {
         this.ctx.fillStyle = "#FFFFFF";
-        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.fillRect(0, 0, this.width * this.scale, this.height * this.scale);
         this.ctx.fillStyle = "#000000";
     }
 
@@ -111,7 +111,12 @@ export class Graphics {
                     this.ctx.lineTo(mid.x + norm.x, mid.y + norm.y);
                     this.ctx.stroke()
                 }
-
+                let axis = body.transformedAxes[0]
+                const mid = axis.axis.scale(0.5).add(axis.p1)
+                this.ctx.beginPath();
+                this.ctx.moveTo(mid.x, mid.y);
+                this.ctx.lineTo(body.pos.x, body.pos.y);
+                this.ctx.stroke()
             }
         } else if (body instanceof Circle) {
             this.ctx.lineWidth = 1 / this.scale;
@@ -119,14 +124,15 @@ export class Graphics {
             this.ctx.beginPath();
             this.ctx.arc(body.pos.x, body.pos.y, body.radius, 0, 2 * Math.PI);
             this.ctx.fill();
-
-            this.ctx.strokeStyle = "#7a7a7a";
-            this.ctx.lineWidth = 3 / this.scale;
-            this.ctx.beginPath();
-            this.ctx.moveTo(body.pos.x, body.pos.y);
-            const radius = body.pos.add(new Vec2(1, 0).rotate(body.rot).scale(body.radius))
-            this.ctx.lineTo(radius.x, radius.y);
-            this.ctx.stroke()
+            if (this.debug) {
+                this.ctx.strokeStyle = "#7a7a7a";
+                this.ctx.lineWidth = 3 / this.scale;
+                this.ctx.beginPath();
+                this.ctx.moveTo(body.pos.x, body.pos.y);
+                const radius = body.pos.add(new Vec2(1, 0).rotate(body.rot).scale(body.radius))
+                this.ctx.lineTo(radius.x, radius.y);
+                this.ctx.stroke()
+            }
         }
     }
 
@@ -151,6 +157,5 @@ export class Graphics {
         return worldPos
             .add(this.cameraPos)
             .scale(this.scale)
-
     }
 }

@@ -14,13 +14,23 @@
         Vec2 = end3in.Vec2,
         Polygon = end3in.Polygon;
 
-    let engine = new Engine(false, "none");
-    const triangle = new Polygon([[0, 0.6], [1, -0.255], [-1, -0.255]], 1, 2, 1, true, 0);
-    const polygon1 = new Polygon([[1.2, 0.8], [0.69, -0.76], [0, -0.5], [-0.25, 0]], 0.8, 4.2, 1, true, Math.PI / 6);
-    const polygon2 = new Polygon([[-0.4, -0.20], [0.44, 0.37], [0.65, 0.25], [0.62, -0.40]], 3.3, 2.0, 1, true, Math.PI / 6);
+    let engine = new Engine(false);
+    const triangle = new Polygon([[0, 0.6], [1, -0.255], [-1, -0.255]], 1, 1, true);
+    triangle.pos = new Vec2( 1, 2)
+    const polygon1 = new Polygon([[1.2, 0.8], [0.69, -0.76], [0, -0.5], [-0.25, 0]],  1,1,  true);
+    polygon1.pos = new Vec2(0.8, 4.2)
+    polygon1.rot =  Math.PI / 6
+    const polygon2 = new Polygon([[-0.4, -0.20], [0.44, 0.37], [0.65, 0.25], [0.62, -0.40]], 1, 1, true);
+    polygon2.pos = new Vec2(3.3, 2.0)
+    polygon2.rot = Math.PI / 6
     const rect1 = new Rectangle(1, 1, 2, -1, 1, true, Math.PI / 4);
 
-    let graphics = new Graphics(1000, 1000, engine, true)
+    let graphics = new Graphics({
+        width: 1000,
+        height: 1000,
+        engine: engine,
+        debug: true,
+    })
 
     engine.addBody(triangle);
     engine.addBody(polygon1);

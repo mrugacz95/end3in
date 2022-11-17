@@ -137,7 +137,7 @@ export class Collision {
         }
 
         const closestPoint = Collision.closestPointOnPolygon(circle.pos, polygon)
-        const normal = closestPoint.sub(circle.pos).normal().normalize()
+        const normal = closestPoint.sub(circle.pos).normalize()
 
         const cProj = Collision.projectCircle(normal, circle)
         const pProj = Collision.projectPolygon(normal, polygon)

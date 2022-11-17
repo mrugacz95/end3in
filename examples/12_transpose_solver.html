@@ -15,11 +15,11 @@
         Circle = end3in.Circle,
         Vec2 = end3in.Vec2;
 
-    let engine = new Engine(false, 'translation');
+    let engine = new Engine(false);
 
-    const obj = new Polygon([[-0.5, 1.0], [2.0, 1.0], [0.5, 0.0]], 1, 1,  false)
+    const obj = new Polygon([[-0.5, 1.0], [2.0, 1.0], [0.5, 0.0]], 1, 1, false)
     obj.pos = new Vec2(-1, 0)
-    // engine.addBody(obj)
+    engine.addBody(obj)
 
     for (let i = 0; i < 6; i++) {
         const rect1 = new Rectangle(0.5, 0.5, 5, Math.random() >= 0.8)
@@ -36,7 +36,6 @@
     ground.pos = new Vec2(0, 4)
     engine.addBody(ground);
 
-
     let slide = new Rectangle(5, 0.5, 1, true)
     slide.pos = new Vec2(-2, 0)
     slide.rot = Math.PI / 7
@@ -44,21 +43,26 @@
 
     engine.start();
 
-    const graphics = new Graphics({width: 2000, height: 1500, engine: engine, debug: true, scale: 50, cameraPos: new Vec2(6, 4)})
+    const graphics = new Graphics({
+        width: 1000,
+        height: 1000,
+        engine: engine,
+        cameraPos: new Vec2(10, 6)
+    })
     graphics.start()
 
     document.addEventListener("keydown", event => {
         if (event.isComposing || event.code === 'ArrowUp') {
-            obj.applyImpulse(new Vec2(0, 5))
+            obj.v = obj.v.add(new Vec2(0, 5))
         }
         if (event.isComposing || event.code === 'ArrowDown') {
-            obj.applyImpulse(new Vec2(0, -5))
+            obj.v = obj.v.add(new Vec2(0, -5))
         }
         if (event.isComposing || event.code === 'ArrowLeft') {
-            obj.applyImpulse(new Vec2(5, 0))
+            obj.v = obj.v.add(new Vec2(5, 0))
         }
         if (event.isComposing || event.code === 'ArrowRight') {
-            obj.applyImpulse(new Vec2(-5, 0))
+            obj.v = obj.v.add(new Vec2(-5, 0))
         }
     });
 </script>

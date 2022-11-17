@@ -15,17 +15,22 @@
         Rectangle = end3in.Rectangle;
 
     let engine = new Engine();
-    const rect1 = new Rectangle(0.5, 0.5,
-        1, 6, 1, true, Math.PI / 6);
-    const rect2 = new Rectangle(0.5, 0.5,
-        0, 6, 1, true, Math.PI / 6);
+    const rect1 = new Rectangle(0.5, 0.5, 1);
+    rect1.pos = Math.PI / 6
+    rect1.pos = new Vec2(1, 6)
+    const rect2 = new Rectangle(0.5, 0.5, 1);
+    rect2.pos = new Vec2(0, 6)
+    rect2.rot = Math.PI / 6
     let poly = new Polygon([[0.25, 0.25],
-        [-0.25,0.25],
-        [-0.25, -0.25],
-        [0.25, -0.25]],
-        2, 2, true, Math.PI / 7);
+            [-0.25, 0.25],
+            [-0.25, -0.25],
+            [0.25, -0.25]],
+        1, 1);
+    poly.pos = new Vec2(2, 2)
+    poly.rot = Math.PI / 7
     const ground = new Rectangle(10, 2,
-        0, 5.0, 1, true);
+        1, true);
+    ground.pos = new Vec2(0, 5.0)
     engine.addBody(rect1);
     engine.addBody(rect2);
     engine.addBody(poly);
@@ -33,9 +38,8 @@
 
     engine.start();
 
-    const graphics = new Graphics(700, 700, engine)
+    const graphics = new Graphics({width: 700, height: 700, engine: engine})
     graphics.start()
-
 
     function setup() {
         rect1.pos = new Vec2(0, 3);
