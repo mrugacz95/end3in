@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shapes</title>
+    <script src="../build/end3in.js"></script>
+</head>
+<body></body>
+<script>
+    let engine = new end3in.Engine(debug = false);
+    const Rectangle = end3in.Rectangle,
+        Polygon = end3in.Polygon,
+        Circle = end3in.Circle,
+        RegularPolygon = end3in.RegularPolygon,
+        Vec2 = end3in.Vec2,
+        Graphics = end3in.Graphics;
+
+    const horizontal = new Rectangle(15, 0.2, 1, true);
+    horizontal.pos = new Vec2(2.3, 5)
+    engine.addBody(horizontal);
+
+    for (let x = 0; x < 4; x++) {
+        for (let y = 0; y < 7; y++) {
+            const regular = new Rectangle(0.4, 0.4, 1, false)
+            regular.pos = new Vec2(3 + x * 0.4, y * 0.4)
+            engine.addBody(regular)
+        }
+    }
+
+    const ball = new Circle(0.5, 0.5, false)
+    engine.addBody(ball)
+
+    document.onmousedown = function () {
+        ball.v = new Vec2(5,-5)
+    }
+
+
+    const graphics = new Graphics({width: 800, height: 900, engine: engine})
+    graphics.start()
+
+    engine.start();
+
+</script>
+</html>
