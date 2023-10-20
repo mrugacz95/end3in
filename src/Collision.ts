@@ -1,6 +1,6 @@
-import { Body, Circle, Polygon } from "./Body";
-import { Vec2 } from "./Vector";
-import { ContactPoints } from "./ContactPoints";
+import {Body, Circle, Polygon} from "./Body";
+import {Vec2} from "./Vector";
+import {ContactPoints} from "./ContactPoints";
 
 export class Collision {
     static areAABBColliding(body1: Body, body2: Body) {
@@ -116,8 +116,7 @@ export class Collision {
         let returnedNormal: Vec2 = null
         let returnedDepth: number = Number.MAX_VALUE
 
-        for (const axisWithPoints of polygon.transformedAxes) {
-            const axis = axisWithPoints.axis
+        for (const {axis: axis} of polygon.transformedAxes) {
             const normal = axis.normal().normalize()
 
             const cProj = Collision.projectCircle(normal, circle)
