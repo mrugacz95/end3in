@@ -1,6 +1,6 @@
-import { Vec2 } from "./Vector";
-import { Utils } from "./Utlis";
-import { AABB } from "./AABB";
+import {Vec2} from "./Vector";
+import {Utils} from "./Utlis";
+import {AABB} from "./AABB";
 
 export abstract class Body {
     protected _pos = Vec2.ZERO;
@@ -13,7 +13,9 @@ export abstract class Body {
     readonly restitution: number;
     color: string;
     transformUpdateRequired: boolean;
-    private _cachedAABB: AABB
+    private _cachedAABB: AABB;
+    readonly staticFriction: number
+    readonly dynamicFriction: number
 
     get AABB(): AABB {
         if (this._cachedAABB === null) {
@@ -29,7 +31,9 @@ export abstract class Body {
         inertia: number,
         isStatic = false,
         restitution = 0.3,
-        color: string = Utils.randomColor()) {
+        color: string = Utils.randomColor(),
+        staticFriction: number = 0.6,
+        dynamicFriction: number = 0.4) {
         this.isStatic = isStatic;
         if (this.isStatic) {
             this.massInv = 0
@@ -44,10 +48,12 @@ export abstract class Body {
         this.omega = 0
         this.transformUpdateRequired = true
         this._cachedAABB = null
+        this.staticFriction = staticFriction
+        this.dynamicFriction = dynamicFriction
     }
 
-    update(dt: number) {
-        if (this.isStatic) {
+    update(dt: number, force: boolean = false) {
+        if (this.isStatic && !force) {
             return
         }
         this.pos = this.pos.add(this.v.scale(dt))
@@ -87,8 +93,21 @@ export class Polygon extends Body {
     points: Vec2[] = [];
     private _transformedPoints: Vec2[] = [];
 
-    constructor(points: number[][], mass: number, inertia: number, isStatic: boolean) {
-        super(mass, inertia, isStatic);
+    constructor(points: number[][],
+                mass: number,
+                inertia: number,
+                isStatic: boolean,
+                restitusion: number,
+                color: string,
+                staticFriction: number,
+                dynamicFriction: number) {
+        super(mass,
+            inertia,
+            isStatic,
+            restitusion,
+            color,
+            staticFriction,
+            dynamicFriction);
         const vertices = points.map(p => new Vec2(p[0], p[1]));
         const meanX = vertices.map((o) => o.x).reduce((p, c) => p + c, 0) / points.length;
         const meanY = vertices.map((o) => o.y).reduce((p, c) => p + c, 0) / points.length;
@@ -142,7 +161,14 @@ export class Polygon extends Body {
 }
 
 export class RegularPolygon extends Polygon {
-    constructor(num_of_vertices: number, radius: number, mass: number, isStatic: boolean) {
+    constructor(num_of_vertices: number,
+                radius: number,
+                mass: number,
+                isStatic: boolean,
+                restitusion: number,
+                color: string,
+                staticFriction: number,
+                dynamicFriction: number) {
         const points = [];
         for (let i = num_of_vertices - 1; i >= 0; i--) {
             const pos_x = Math.cos(2.0 * Math.PI / num_of_vertices * i) * radius;
@@ -150,27 +176,40 @@ export class RegularPolygon extends Polygon {
             points.push([pos_x, pos_y])
         }
         const inertia = 1 / 2 * mass * radius * radius * (1 - 2 / 3 * Math.sin(Math.PI / num_of_vertices) * Math.sin(Math.PI / num_of_vertices))
-        super(points, mass, inertia, isStatic)
+        super(points, mass, inertia, isStatic, restitusion, color, staticFriction, dynamicFriction)
     }
 }
 
 export class Rectangle extends Polygon {
-    constructor(width: number, height: number, mass: number, isStatic: boolean) {
+    constructor(width: number,
+                height: number,
+                mass: number,
+                isStatic: boolean,
+                restitution: number,
+                color: string,
+                staticFriction: number = 0.6,
+                dynamicFriction: number = 0.4) {
         const points = [[-width / 2, height / 2],
             [width / 2, height / 2],
             [width / 2, -height / 2],
             [-width / 2, -height / 2]];
         const inertia = 1 / 12 * mass * (height * height + width * width)
-        super(points, mass, inertia, isStatic);
+        super(points, mass, inertia, isStatic, restitution, color, staticFriction, dynamicFriction);
     }
 }
 
 export class Circle extends Body {
     radius: number;
 
-    constructor(radius: number, mass: number, isStatic: boolean) {
+    constructor(radius: number,
+                mass: number,
+                isStatic: boolean,
+                restitusion: number,
+                color: string,
+                staticFriction: number,
+                dynamicFriction: number) {
         const inertia = 0.5 * mass * radius * radius;
-        super(mass, inertia, isStatic);
+        super(mass, inertia, isStatic, restitusion, color, staticFriction, dynamicFriction);
         this.radius = radius;
     }
 

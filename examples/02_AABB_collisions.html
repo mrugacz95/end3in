@@ -13,10 +13,16 @@
         Graphics = end3in.Graphics,
         Vec2 = end3in.Vec2;
     const engine = new Engine();
-    const rect1 = new Rectangle(0.5, 0.5, 3, 4, 1, true, 0.22);
-    const rect2 = new Rectangle(1.0, 1.5, 5, 6, 1, true, Math.PI / 5);
-    const circle1 = new end3in.Circle(0.6, 3.5, 2.5, 1, true);
-    const circle2 = new end3in.Circle(0.6, 2, 0.5, 1, true);
+    const rect1 = new Rectangle(0.5, 0.5, 1, true);
+    rect1.pos = new Vec2(3, 4)
+    rect1.rot = 0.22
+    const rect2 = new Rectangle(1.0, 1.5, 1, true);
+    rect2.pos = new Vec2(5, 6,)
+    rect2.rot = Math.PI / 5
+    const circle1 = new end3in.Circle(0.6, 1, true);
+    circle1.pos = new Vec2(3.5, 2.5)
+    const circle2 = new end3in.Circle(0.6, 1, true);
+    circle1.pos = new Vec2(2, 2.5)
     engine.addBody(rect2);
     engine.addBody(circle1);
     engine.addBody(circle2);
@@ -24,12 +30,21 @@
     engine.g = 0
     engine.start();
 
-    let graphics = new Graphics({ width: 600, height: 600, engine: engine, debug: true, scale: 60, cameraPos: new Vec2(0, 0) })
+    let graphics = new Graphics({
+        width: 600,
+        height: 600,
+        engine: engine,
+        debug: true,
+        scale: 60,
+        cameraPos: new Vec2(0, 0)
+    })
     graphics.start()
 
     document.onmousemove = function (event) {
         rect1.pos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY));
-        circle2.pos = graphics.clientToWorldPos(new Vec2(event.clientX, event.clientY)).add(new Vec2(1.5, 0));
+        circle2.pos = rect1.pos.add(new Vec2(1.5, 0));
+        rect1.update(0, true)
+        circle2.update(0, true)
         if (Collision.areAABBColliding(rect1, rect2)) {
             rect1.color = "#e62131EE";
         } else if (Collision.areAABBColliding(rect1, circle1)) {

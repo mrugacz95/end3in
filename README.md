@@ -2,9 +2,7 @@
 
 Sample physics engine written in JS for understanding physic simulation math.
 
-**Note:** last part related to bodies friction force wasn't implemented yet.
-
-![tower](https://github.com/mrugacz95/end3in/assets/12548284/7562a3e1-c5d0-40d1-9252-996692b47b00)
+![ball_hit_tower](https://github.com/mrugacz95/end3in/assets/12548284/c779e85f-8ef7-47f0-afba-20abd8ef332c)
 
 # Knowledge
 

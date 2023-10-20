@@ -39,12 +39,24 @@
 
         function drawContactPoint(point) {
             let clientPos = graphics.worldToCanvasPosition(point)
-            console.log(point)
             console.log(clientPos)
             graphics.ctx.fillStyle = "#ee801a";
             graphics.ctx.beginPath();
-            graphics.ctx.arc(clientPos.x, clientPos.y, 5, 0, 2 * Math.PI);
+            graphics.ctx.arc(clientPos.x, clientPos.y, 2, 0, 2 * Math.PI);
             graphics.ctx.fill();
+        }
+
+        function drawSeparatingVector(contactPoint, normal, depth){
+            let vectorStartPoint = graphics.worldToCanvasPosition(contactPoint)
+            let vectorEndPoint = graphics.worldToCanvasPosition(contactPoint.add(normal.scale(-depth)))
+            graphics.ctx.strokeStyle = "#36ee1a";
+            graphics.ctx.beginPath();
+            graphics.ctx.lineWidth = 5;
+            graphics.ctx.moveTo(vectorStartPoint.x, vectorStartPoint.y);
+            graphics.ctx.lineTo(vectorEndPoint.x, vectorEndPoint.y);
+            graphics.ctx.stroke();
+            console.log(vectorStartPoint)
+            console.log(vectorEndPoint)
         }
 
         function collide(body1, body2) {
@@ -54,11 +66,13 @@
                 switch (cp.contactCount) {
                     case 1: {
                         drawContactPoint(cp.contactPoint1)
+                        drawSeparatingVector(cp.contactPoint1, collision.normal, collision.depth)
                         break
                     }
                     case 2: {
                         drawContactPoint(cp.contactPoint1)
                         drawContactPoint(cp.contactPoint2)
+                        drawSeparatingVector(cp.contactPoint1, collision.normal, collision.depth)
                         break
                     }
                 }

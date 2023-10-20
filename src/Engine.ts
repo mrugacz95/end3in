@@ -1,7 +1,7 @@
-import { Body } from "./Body";
-import { Vec2 } from "./Vector"
-import { Collision, CollisionManifold, MTV } from "./Collision";
-import { ContactPoints } from "./ContactPoints";
+import {Body} from "./Body";
+import {Vec2} from "./Vector"
+import {Collision, CollisionManifold, MTV} from "./Collision";
+import {ContactPoints} from "./ContactPoints";
 
 export class Engine {
     dt: number;
@@ -83,7 +83,7 @@ export class Engine {
                     collisionMTV,
                     contactPoints
                 )
-                this.resolveCollisionWithRotation(collisionManifold)
+                this.resolveCollisionWithRotationAndFriction(collisionManifold)
             }
         }
     }
@@ -102,10 +102,10 @@ export class Engine {
         }
     }
 
-    resolveCollisionWithRotation(collisionManifold: CollisionManifold) {
+    resolveCollisionWithRotationAndFriction(collisionManifold: CollisionManifold) {
         const body1: Body = collisionManifold.body1
         const body2: Body = collisionManifold.body2
-        const normal = collisionManifold.normal.normalize()
+        const normal: Vec2 = collisionManifold.normal.normalize()
         type Impulse = {
             impulse: Vec2;
             r1: Vec2;
@@ -114,6 +114,10 @@ export class Engine {
         const impulses: Impulse[] = []
 
         const e = Math.min(body1.restitution, body2.restitution);
+        const jValues: number[] = []
+        const frictionImpulses: Impulse[] = []
+        const staticFriction = this.pythagoreanSolve(body1.staticFriction, body2.staticFriction)
+        const dynamicFriction = this.pythagoreanSolve(body1.dynamicFriction, body2.dynamicFriction)
 
 
         const contactList = [collisionManifold.contact1, collisionManifold.contact2]
@@ -147,6 +151,8 @@ export class Engine {
                 + (r2PerpDotN * r2PerpDotN) * body2.inertiaInv;
             j /= collisionManifold.contactCount
 
+            jValues.push(j)
+
             const impulse = normal.scale(j);
             impulses.push({
                 impulse: impulse,
@@ -155,15 +161,72 @@ export class Engine {
             })
         }
 
-        for (const imp of impulses) {
-            const impulse = imp.impulse;
-            const r1 = imp.r1;
-            const r2 = imp.r2;
-
+        for (const {impulse: impulse, r1: r1, r2: r2} of impulses) {
             body1.v = body1.v.sub(impulse.scale(body1.massInv));
             body1.omega = body1.omega - r1.cross(impulse) * body1.inertiaInv
             body2.v = body2.v.add(impulse.scale(body2.massInv));
             body2.omega = body2.omega + r2.cross(impulse) * body2.inertiaInv
         }
+
+        for (let i = 0; i < collisionManifold.contactCount; i++) {
+            if (jValues.length <= i) break
+            const contactPoint = contactList[i]
+            const r1 = contactPoint.sub(body1.pos)
+            const r2 = contactPoint.sub(body2.pos)
+
+            const r1Perp = r1.normal()
+            const r2Perp = r2.normal()
+
+            const angularLinearVelocityBody1 = r1Perp.scale(body1.omega)
+            const angularLinearVelocityBody2 = r2Perp.scale(body2.omega)
+
+            const relativeVelocity = (body2.v.add(angularLinearVelocityBody2))
+                .sub((body1.v.add(angularLinearVelocityBody1)))
+
+            let tangent = relativeVelocity.sub(normal.scale(relativeVelocity.dot(normal)))
+
+            if (tangent.isCloseTo(Vec2.ZERO)) {
+                continue
+            } else {
+                tangent = tangent.normalize()
+            }
+
+            const r1PerpDotT = r1Perp.dot(tangent)
+            const r2PerpDotT = r2Perp.dot(tangent)
+
+            let jt: number = -relativeVelocity.dot(normal)
+            jt /= body1.massInv + body2.massInv +
+                (r1PerpDotT * r1PerpDotT) * body1.inertiaInv +
+                (r2PerpDotT * r2PerpDotT) * body2.inertiaInv
+            jt /= collisionManifold.contactCount
+
+            const j = jValues[i]
+
+            let frictionImpulse: Vec2
+            if (Math.abs(j) < -j * staticFriction) {
+                frictionImpulse = tangent.scale(jt)
+            } else {
+                frictionImpulse = tangent.scale(-j * dynamicFriction)
+            }
+
+            frictionImpulses.push(
+                {
+                    impulse: frictionImpulse,
+                    r1: r1,
+                    r2: r2
+                }
+            )
+        }
+
+        for (const {impulse: impulse, r1: r1, r2: r2} of frictionImpulses) {
+            body1.v = body1.v.sub(impulse.scale(body1.massInv))
+            body1.omega = body1.omega - r1.cross(impulse) * body1.inertiaInv
+            body2.v = body2.v.add(impulse.scale(body2.massInv))
+            body2.omega = body2.omega + r2.cross(impulse) * body2.inertiaInv
+        }
+    }
+
+    pythagoreanSolve(a: number, b: number) {
+        return Math.sqrt(a * a + b * b)
     }
 }

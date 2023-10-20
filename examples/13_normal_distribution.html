@@ -11,7 +11,6 @@
     const Rectangle = end3in.Rectangle,
         Polygon = end3in.Polygon,
         Circle = end3in.Circle,
-        RegularPolygon = end3in.RegularPolygon,
         Vec2 = end3in.Vec2,
         Graphics = end3in.Graphics;
 
@@ -23,7 +22,7 @@
         const regular = new Rectangle(0.2, 4.8, 1, true)
         regular.pos = new Vec2(-1 + i * 0.4, 9.5)
         engine.addBody(regular)
-        const top = new Polygon([[0.0, 0.0], [-0.1,0.2], [0.1, 0.2]], 1, 1, true)
+        const top = new Polygon([[0.0, 0.0], [-0.1, 0.2], [0.1, 0.2]], 1, 1, true)
         top.pos = new Vec2(-1 + i * 0.4, 7.05)
         engine.addBody(top)
     }
@@ -44,12 +43,12 @@
         }
     }
 
-    let right = new Rectangle(0.2, 5, 1, true)
+    let right = new Rectangle(0.2, 5, 1, true, undefined, undefined, 0, 0)
     right.pos = new Vec2(4.95, -1)
     right.rot = Math.PI / 3
     engine.addBody(right)
 
-    let left = new Rectangle(0.2, 5, 1, true)
+    let left = new Rectangle(0.2, 5, 1, true, undefined, undefined, 0, 0)
     left.pos = new Vec2(0.05, -1)
     left.rot = -Math.PI / 3
     engine.addBody(left)
@@ -68,7 +67,7 @@
     let positions = []
     for (let y = 0; y < 11; y++) {
         for (let x = 0; x < 15; x++) {
-            const regular = new Circle(0.1, 1, false)
+            const regular = new Circle(0.1, 1, false, undefined, undefined,  0, 0)
             gameObjects.push(regular)
             positions.push(new Vec2(x * 0.2 + 1, y * 0.2 - 3))
         }
@@ -79,7 +78,7 @@
     function setup() {
         for (let i = 0; i < gameObjects.length; i++) {
             gameObjects[i].pos = positions[i]
-            gameObjects[i].v = new Vec2(0,0)
+            gameObjects[i].v = new Vec2(0, 0)
             gameObjects[i].omega = 0
         }
     }
