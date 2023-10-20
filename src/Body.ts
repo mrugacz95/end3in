@@ -185,10 +185,10 @@ export class Rectangle extends Polygon {
                 height: number,
                 mass: number,
                 isStatic: boolean,
-                restitution: number,
-                color: string,
-                staticFriction: number = 0.6,
-                dynamicFriction: number = 0.4) {
+                restitution: number = undefined,
+                color: string = undefined,
+                staticFriction: number = undefined,
+                dynamicFriction: number = undefined) {
         const points = [[-width / 2, height / 2],
             [width / 2, height / 2],
             [width / 2, -height / 2],
@@ -204,10 +204,10 @@ export class Circle extends Body {
     constructor(radius: number,
                 mass: number,
                 isStatic: boolean,
-                restitusion: number,
-                color: string,
-                staticFriction: number,
-                dynamicFriction: number) {
+                restitusion: number = undefined,
+                color: string = undefined,
+                staticFriction: number = undefined,
+                dynamicFriction: number = undefined) {
         const inertia = 0.5 * mass * radius * radius;
         super(mass, inertia, isStatic, restitusion, color, staticFriction, dynamicFriction);
         this.radius = radius;
