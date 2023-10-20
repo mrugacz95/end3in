@@ -111,7 +111,7 @@ export class Graphics {
                     this.ctx.lineTo(mid.x + norm.x, mid.y + norm.y);
                     this.ctx.stroke()
                 }
-                let axis = body.transformedAxes[0]
+                const axis = body.transformedAxes[0]
                 const mid = axis.axis.scale(0.5).add(axis.p1)
                 this.ctx.beginPath();
                 this.ctx.moveTo(mid.x, mid.y);
