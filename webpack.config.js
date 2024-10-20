@@ -1,9 +1,12 @@
-module.exports = {
+import path from "path"
+const __dirname = path.resolve();
+
+export default {
     entry: './src/main.ts',
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.ts$/,
                 use: 'ts-loader',
                 exclude: /node_modules/,
             },

@@ -3,9 +3,9 @@ import { Vec2 } from "./Vector";
 import { Utils } from "./Utlis";
 
 export class ContactPoints {
-    contactPoint1 : Vec2 = null
-    contactPoint2 : Vec2 = null
-    contactCount = 0
+    contactPoint1 : Vec2 = null;
+    contactPoint2 : Vec2 = null;
+    contactCount = 0;
 
     constructor(body1: Body, body2: Body) {
         let contactPoints : Vec2[]
@@ -15,7 +15,7 @@ export class ContactPoints {
             } else if (body2 instanceof Circle) {
                 contactPoints =  ContactPoints.contactPointsCircleToCircle(body1, body2)
             } else {
-                throw new Error(`Contact points between circle and ${body2} is not implemented yet`)
+                throw new Error(`Contact points between circle and ${JSON.stringify(body2)} is not implemented yet`)
             }
         } else if (body1 instanceof Polygon) {
             if (body2 instanceof Polygon) {
@@ -23,10 +23,10 @@ export class ContactPoints {
             } else if (body2 instanceof Circle) {
                 contactPoints =  ContactPoints.contactPointsCircleToPolygon(body2, body1)
             } else {
-                throw new Error(`Contact points between polygon and ${body2} is not implemented yet`)
+                throw new Error(`Contact points between polygon and ${JSON.stringify(body2)} is not implemented yet`)
             }
         } else {
-            throw new Error(`Contact points between ${body1} and ${body2} is not implemented yet`)
+            throw new Error(`Contact points between ${JSON.stringify(body1)} and ${JSON.stringify(body2)} is not implemented yet`)
         }
         this.contactPoint1 = contactPoints[0]
         this.contactPoint2 = contactPoints[1]

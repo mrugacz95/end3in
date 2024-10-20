@@ -53,7 +53,7 @@ export class Collision {
             } else if (body2 instanceof Circle) {
                 collisionManifold = Collision.intersectCircles(body1, body2)
             } else {
-                throw new Error(`Colliding circle with ${body2} is not implemented yet`)
+                throw new Error(`Colliding circle with ${JSON.stringify(body2)} is not implemented yet`)
             }
         } else if (body1 instanceof Polygon) {
             if (body2 instanceof Polygon) {
@@ -65,10 +65,10 @@ export class Collision {
                     collisionManifold.normal = collisionManifold.normal.inv()
                 }
             } else {
-                throw new Error(`Colliding polygon with ${body2} is not implemented yet`)
+                throw new Error(`Colliding polygon with ${JSON.stringify(body2)} is not implemented yet`)
             }
         } else {
-            throw new Error(`Colliding ${body1} with ${body2} is not implemented yet`)
+            throw new Error(`Colliding ${JSON.stringify(body1)} with ${JSON.stringify(body2)} is not implemented yet`)
         }
 
         return collisionManifold
