@@ -11,25 +11,25 @@ export class Utils {
     }
 
     static closestPointOnSegment(point: Vec2, a: Vec2, b: Vec2): Vec2 {
-        const ab = b.sub(a)
-        const ap = point.sub(a)
-        const proj = ab.dot(ap)
-        const abLenSq = ab.magnitude()
-        const d = proj / abLenSq
+        const ab = b.sub(a);
+        const ap = point.sub(a);
+        const proj = ab.dot(ap);
+        const abLenSq = ab.magnitude();
+        const d = proj / abLenSq;
 
-        let closestPoint: Vec2
+        let closestPoint: Vec2;
 
         if (d <= 0) {
-            closestPoint = a
+            closestPoint = a;
         } else if (d >= 1) {
-            closestPoint = b
+            closestPoint = b;
         } else {
-            closestPoint = a.add(ab.scale(d))
+            closestPoint = a.add(ab.scale(d));
         }
-        return closestPoint
+        return closestPoint;
     }
 
     static isCloseTo(a: number, b: number,): boolean {
-        return Math.abs(b - a) < 0.0005
+        return Math.abs(b - a) < 0.0005;
     }
 }

@@ -1,5 +1,5 @@
 export class Solver {
-    static solve(mat: number[][], b: number[], iterations: number) {
+    static solve(mat: number[][], b: number[], iterations: number) : number[] {
         // Ax = b
         const x = [];
         for (let i = 0; i < mat.length; i++) {
